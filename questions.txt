@@ -2,4 +2,4 @@ Should Banks Fear or Embrace Blockchain Technology?
 Is there any future plan for Robotic Process Automation in Bank for business like fraudulent claims, compliance departments or even in financial advice?
 What are the challenges to implement maximum automated IT enabled systems in bank?
 How bank analyze customer needs or business opportunities without customer coming to the bank?
-How far bank is in Cloud Computing?
+Historically, banks have been reluctant to embrace cloud technologies due to data privacy and security concerns but what is happening today is enormous growth in banking applications coming to the cloud, spanning the front office to the back office. How far 53 bank in Cloud comupting?
