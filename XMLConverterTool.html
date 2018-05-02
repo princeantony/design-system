@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script language="javascript">
+
+        // Make sure that each hexCode shold have a corresponding symbolText to replace
+        var hexCodes = ["%3C", "%3E", "%2B", "%2C", "%3B", "%2F", "%6E", "%7C", "%25"]; // Encoded chars
+        var symbolText = ["<", ">", "", "", "", "", "", "", ""]; // To be replaced with
+
+        var inputXMLString;
+        function ConvertToXML() {
+            decodedXMLString = document.getElementById("encodedXML").value;
+            for (var i = 0; i < hexCodes.length; i++) {
+
+                try {
+                    decodedXMLString = decodedXMLString.replace(new RegExp(hexCodes[i], 'g'), symbolText[i]);
+                }
+                catch(err)
+                {
+                    //nothing to do
+                }
+
+            }
+            document.getElementById("decodedXML").value = decodedXMLString;
+
+        }
+    </script>
+
+    <style>
+        div.container {
+            width: 100%;
+            border: 1px solid gray;
+        }
+        .divHeader {
+            padding: 1em;
+            color: white;
+            background-color: #580;
+            clear: left;
+            text-align: center;
+            height: 30px
+        }
+
+        .divFooter {
+            padding: 1em;
+            color: white;
+            background-color: #580;
+            clear: left;
+            text-align: center;
+        }
+
+        .leftDiv {
+            float: left;
+            max-width: 40%;
+            margin: 0;
+            padding: 1em;
+            border-right: 1px solid gray;
+        }
+
+        .buttonDiv {
+            float: left;
+           
+            margin:  1px 3px 1px 3px;
+            padding: 200px 0px;
+        }
+
+        .button {
+            color: white;
+            background-color: #fd771f;
+            cursor: pointer
+        }
+        .lableButton {
+            color: white;
+            background-color: #580;
+        }
+        .rightDiv {
+            margin: 0;
+            max-width: 45%;
+            border-left: 1px solid gray;
+            padding: 1em;
+            overflow: hidden;
+        }
+    </style>
+
+</head>
+<body>
+
+    <div class="container">
+
+        <div class="divHeader">
+            <div>REGIONS BANK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+
+        </div>
+
+        <div class="leftDiv">
+            <input type="button" value="Encoded XML" class="lableButton" title="Copy paste below encoded input XML" disabled/>
+            <textarea id="encodedXML" rows="25" cols="65"></textarea>
+        </div>
+        <div class="buttonDiv">
+            <input type="button" value="Convert" class="button" onclick="ConvertToXML()" title="Click here to convert encoded XML to readable decoded XML" />
+        </div>
+        <div class="rightDiv">
+            <input type="button" value="Decoded XML" class="lableButton" title="Decoded XML shows below" disabled/>
+            <textarea id="decodedXML" rows="25" cols="75"></textarea>
+        </div>
+
+        <div class="divFooter"></div>
+
+    </div>
+
+</body>
+</html>
