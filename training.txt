@@ -1,0 +1,15 @@
+var jsonResult ='';
+fetch('https://api.github.com/users')
+  .then(function(response) {
+    return response.json();
+  })
+  .then(function(users) {
+     jsonResult = users.map(user=>user.login);       
+   });
+
+var txtSearchBox = document.getElementById("txtSearch");
+txtSearchBox.addEventListener('keypress',(e) => {
+  debugger;
+  console.log(jsonResult.filter(usr=> usr.startsWith(txtSearchBox.value)));
+  //console.log("keypressed " + txtSearchBox.value);
+});
