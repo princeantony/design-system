@@ -1,0 +1,63 @@
+<template>
+    <label>Enter Title</label>
+    <input type="text"  keypress.trigger="getSerchResult($event)" value.bind="search" /> <br /><br />
+  <table border="1">
+    <thead>
+      <tr>        
+        <td><b>Id</b></td>
+        <td><b>Login</b></td>
+        <td><b>Url</b></td>
+        
+    </thead>
+    <tbody>
+      <tr repeat.for="user of filterList">     
+        
+        <td>${user.id}</td>
+        <td>${user.login}</td>
+        <td>${user.avatar_url}</td> 
+
+      </tr>
+    </tbody>
+  </table>
+</template>
+
+======================
+
+import {inject} from 'aurelia-framework';
+import {HttpClient} from 'aurelia-fetch-client';
+//let httpClient = new HttpClient();
+@inject(HttpClient)
+export class UserService
+{
+    constructor(HttpClient){
+        this.HttpClient = HttpClient;
+         this.usersList = this.getUsers();;
+         //this.getUsers();
+    }
+    getUsers()
+    {
+        this.HttpClient.fetch('https://api.github.com/users')
+                .then(response => response.json())
+                      .then(data => { 
+                         return data;                      
+                    });
+    }
+}
+
+=================
+import _ from 'lodash';
+import {inject} from 'aurelia-framework';
+import {UserService} from './services/user-service';
+@inject(UserService)
+export class App{
+    constructor(userservice){
+        this.users = userservice.usersList;
+        this.filterList = [];
+        this.search = "";
+    }
+    getSerchResult(e)
+    {
+         this.filterList = this.users.filter(function(usr) {
+           return usr.login.startsWith(this.search}); 
+    }
+}
