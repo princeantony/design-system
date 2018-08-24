@@ -1,0 +1,8 @@
+tihs.userService.cost.subscribt(users=> thiss.user=user)
+this.userserviec.edituser(this.edituser)
+import {BehavioirSubject} from 'rxjs/BehaviourSubject'
+priate usre=new BehaviorSubject(<string>('john');
+cast=this.user.asObserverable();
+constructor(){}
+edituser(newuser)
+this.user.next(newuser)
