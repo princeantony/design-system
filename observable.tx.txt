@@ -6,3 +6,18 @@ cast=this.user.asObserverable();
 constructor(){}
 edituser(newuser)
 this.user.next(newuser)
+
+constructor(private bankInfoService: BankInfoService, 
+              private route: ActivatedRoute,
+              private e1: ElementRef ,
+              private router : Router,
+              private modalService: ModalService) { }
+
+  var hElement: HTMLElement = this.e1.nativeElement.getElementsByClassName("col-6");
+   console.log("printdiv", hElement[0].innerHTML);
+   var generator = window.open("", 'name,');
+   generator.document.write(hElement[0].innerHTML);
+   generator.document.close();
+   generator.print();
+   
+   import { Component, OnInit, ElementRef } from '@angular/core';
