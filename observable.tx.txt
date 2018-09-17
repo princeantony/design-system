@@ -21,3 +21,7 @@ constructor(private bankInfoService: BankInfoService,
    generator.print();
    
    import { Component, OnInit, ElementRef } from '@angular/core';
+   
+   
+  const modelElement = document.getElementById(this.id)
+          modelElement.parentElement.removeChild(modelElement)
