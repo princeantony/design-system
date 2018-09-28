@@ -25,3 +25,27 @@ constructor(private bankInfoService: BankInfoService,
    
   const modelElement = document.getElementById(this.id)
           modelElement.parentElement.removeChild(modelElement)
+
+----
+<!DOCTYPE html>
+<html>
+<body>
+        <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.10/lodash.min.js"></script>
+<script>
+    const obj1 = [
+    { id: '1', food1: 'pizza1', car: 'ford1' },
+    { id: '2', food2: 'pizza2', car: 'ford2' },
+    ];
+    const obj2 = [
+    { id: '1',  food3: 'pizza1', animal: 'dog1' },
+    { id: '2', food4: 'pizza2', animal: 'dog2' }
+    ];
+    var merged1;
+    var merged = _.toArray(_.merge(_.keyBy(obj1, 'id'), _.keyBy(obj2, 'id')));
+    console.log("merged.length",_.size(merged))
+    console.log("merged", merged );
+    merged1 = _.take(merged, _.size(merged));
+    console.log("merged1", merged1 );
+</script>
+</body>
+</html>
