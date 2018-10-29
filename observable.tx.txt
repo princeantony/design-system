@@ -1,10 +1,39 @@
-onSubmit() {
-  const updatedSources = [];
-  _.forEach(PayAdminGlobalState.moneySource, function(source) {
-    updatedSources.push(_.omit(source, ['longName', 'shortName']));
-  });
-  const updatedInvestments = [];
-  _.forEach(PayAdminGlobalState.investments, function(investment) {
-    updatedInvestments.push(_.omit(investment, ['longName']));
-  });
-}
+
+              <voya-select
+              placeHolderText="Copy Information from Division"
+              controlLabel="Copy Information from Division"
+              displayText="textOnly"
+              displayValue='id'
+              [items]="bankNames"
+              [isRequired] = "false">
+        </voya-select>
+        
+        ==================
+           <ng-select
+        [items]="items"
+        [bindLabel]="displayText"
+        [virtualScroll]="true"
+        [bindValue]="displayValue"
+        [placeholder]="placeHolderText"
+        [searchable]="false"
+        [disabled]="disabled"
+        [(ngModel)]="value"
+        (change)="onSelectedIndexChange()"
+        (blur)="onTouched($event)"
+        [required]="isRequired"
+    >
+    </ng-select>
+     private _items: { any }[];
+      @Input() displayText = 'displayText';
+  @Input() displayValue = 'value';
+  
+  
+  @Input()
+  set items(list: { any }[]) {
+    console.log(list, 'list')
+    this._items = list;
+  }
+  get items() {
+    console.log(this._items, '_items get')
+    return this._items;
+  }
