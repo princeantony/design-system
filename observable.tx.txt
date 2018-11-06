@@ -1,39 +1,24 @@
+validation
+Commons Validation
+1. Plan number should be available from the list of plans.
+2. User should have permission for optinal data elements module (Payadmin Permission)
 
-              <voya-select
-              placeHolderText="Copy Information from Division"
-              controlLabel="Copy Information from Division"
-              displayText="textOnly"
-              displayValue='id'
-              [items]="bankNames"
-              [isRequired] = "false">
-        </voya-select>
-        
-        ==================
-           <ng-select
-        [items]="items"
-        [bindLabel]="displayText"
-        [virtualScroll]="true"
-        [bindValue]="displayValue"
-        [placeholder]="placeHolderText"
-        [searchable]="false"
-        [disabled]="disabled"
-        [(ngModel)]="value"
-        (change)="onSelectedIndexChange()"
-        (blur)="onTouched($event)"
-        [required]="isRequired"
-    >
-    </ng-select>
-     private _items: { any }[];
-      @Input() displayText = 'displayText';
-  @Input() displayValue = 'value';
-  
-  
-  @Input()
-  set items(list: { any }[]) {
-    console.log(list, 'list')
-    this._items = list;
-  }
-  get items() {
-    console.log(this._items, '_items get')
-    return this._items;
-  }
+Additional Validations
+Use Override: enabled if accumulate is true
+if Use Override then override name should not be empty
+
+Override Name enabled if accumulate is true, onBlur  if Override Name is empty then Use Override is false;
+
+on accumulate check part otions section under Accumulate data element will be displayed else will not be displayed and bottom 2 fields will be left empty
+
+LOA Option under Participant: will be displaayed only when following meets
+showLOAOption is true
+ 
+ 
+accumulate will be disabled  showAccumulate
+if dataElement 2 is neither "PH" nor "ph"
+then
+User Override and overide Name will be false and disabled;
+
+if dataElement3 is neither 085 or 340
+then  User Override and overide Name will be false and disabled;
