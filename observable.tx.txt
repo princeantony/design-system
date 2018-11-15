@@ -1,310 +1,45 @@
-validation
-Commons Validation
-1. Plan number should be available from the list of plans.
-2. User should have permission for optinal data elements module (Payadmin Permission)
+import { Component } from '@angular/core';
 
-Additional Validations
-Use Override: enabled if accumulate is true
-if Use Override then override name should not be empty
-
-Override Name enabled if accumulate is true, onBlur  if Override Name is empty then Use Override is false;
-
-on accumulate check part otions section under Accumulate data element will be displayed else will not be displayed and bottom 2 fields will be left empty
-
-LOA Option under Participant: will be displaayed only when following meets
-showLOAOption is true
- 
- 
-accumulate will be disabled  showAccumulate
-if dataElement 2 is neither "PH" nor "ph"
-then
-User Override and overide Name will be false and disabled;
-
-if dataElement3 is neither 085 or 340
-then  User Override and overide Name will be false and disabled;
-================
-
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
-import {
-  AddEnrollmentOptions,
-  BatchParticipantOptions,
-  ContributionOptions,
-  ParticipantOptions,
-} from 'src/app/shared/config/data-element.config';
-import { PayAdminGlobalState } from 'src/app/shared/store/pay-admin-global.store';
-import { APP_CONST } from '../../../../../shared/constants/app.constants';
-import { AdminService } from '../../../services/admin.service';
+import { CommonService } from '../app/shared/services/common.service';
+import { PayAdminGlobalState } from './shared/store/pay-admin-global.store';
 import { Router } from '@angular/router';
-import { ModalService } from '../../../../../shared/services/modal.service';
 
 @Component({
-  selector: 'app-admin-data-element-item',
-  templateUrl: './admin-data-element-item.component.html'
+  selector: 'app-root',
+  templateUrl: './app.component.html'
 })
+export class AppComponent {
+  title = 'PayAdmin';
+  date = new Date().toLocaleDateString();
+  constructor(private commonService: CommonService,private router: Router,
+  ) {}
 
-export class AdminDataElementItemComponent implements OnInit {
-
-  hidePageTitle: boolean;
-  subTitle: string;
-  planNumber: string;
-  selectedDataElement: any;
-  participantOptions : any;
-  addEnrollmentOptions: any;
-  contributionOptions: any;
-  isButtonDisabled = true;
-  batchParticipantOptions: any;
-  selectedDEId : string;
-  newDataElement: string;
-  modelId = 'deModal';
-  type = 'Data Element';
-  isCreate = true;
-  hideAccumulate = false;
-  hideUserOverride = false;
-  isOverNameRequired = false;
-  showAccumulate = false;
-   updateOtionalDataForm = this.fb.group({
-    dataElement1: ['', Validators.required],
-    dataElement2: ['', Validators.required],
-    dataElement3: ['', Validators.required],
-    omniName: ['', Validators.required],
-    overrideName: [''],
-    addEnrollment: ['', Validators.required],
-    userOverride: ['', Validators.required],
-    accuUserOverride: ['', Validators.required],
-    participant: ['', Validators.required],
-    contribution: ['', Validators.required],
-    batchParticipant: ['', Validators.required],
-  });
-  constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private modalService: ModalService,
-    private adminService: AdminService)
-  {
-
-  }
-  populateForm(dataElement) {
-
-    this.updateOtionalDataForm.controls['dataElement1'].setValue(dataElement.dataElement1);
-    this.updateOtionalDataForm.controls['dataElement2'].setValue(dataElement.dataElement2);
-    this.updateOtionalDataForm.controls['dataElement3'].setValue(dataElement.dataElement3);
-    this.updateOtionalDataForm.controls['omniName'].setValue(dataElement.omniName);
-    this.updateOtionalDataForm.controls['overrideName'].setValue(dataElement.overrideName);
-    this.updateOtionalDataForm.controls['userOverride'].setValue(dataElement.userOverride);
-    this.updateOtionalDataForm.controls['accuUserOverride'].setValue(dataElement.accuUserOverride);
-    this.updateOtionalDataForm.controls['addEnrollment'].setValue(dataElement.addEnrollment);
-    this.updateOtionalDataForm.controls['participant'].setValue(dataElement.participant);
-    this.updateOtionalDataForm.controls['contribution'].setValue(dataElement.contribution);
-    this.updateOtionalDataForm.controls['batchParticipant'].setValue(dataElement.batchParticipant);
-  }
-  onStateChange(value: string) {
-    console.log("value changed"  + value);
-  }
-  ngOnInit() {
-
-    this.participantOptions = ParticipantOptions;
-    this.addEnrollmentOptions = AddEnrollmentOptions;
-    this.contributionOptions = ContributionOptions;
-    this.batchParticipantOptions = BatchParticipantOptions;
-    if(PayAdminGlobalState.dataElement) {
-    this.isButtonDisabled = false;
-    this.isCreate = false;
-    this.selectedDataElement = PayAdminGlobalState.dataElement;
-    this.selectedDEId = PayAdminGlobalState.dataElement.dataElement;
-    this.populateForm(this.selectedDataElement);
-this.enableDisableFields(this.selectedDataElement);
+  ngOnInit(): void {
+    if(PayAdminGlobalState.loginStatus) {
+       console.log('loginStatus is not empty')
+        if (!PayAdminGlobalState.stateList) {
+          console.log('stateList is not empty')
+      this.commonService.getStateList().subscribe(result => {
+        if (result.status === 'SUCCESS') {
+          PayAdminGlobalState.stateList = result.data;
+        }
+      });
+    }
+    if (!PayAdminGlobalState.countryList) {
+      console.log('countryList is not empty')
+      this.commonService.getCountryList().subscribe(result => {
+        if (result.status === 'SUCCESS') {
+          PayAdminGlobalState.countryList = result.data;
+        }
+      });
+    }
+    this.router.navigate(['/plans']);
+    }
+    else {
+      console.log('loginStatus is  empty')
+    this.router.navigate(['/']);
     }
   }
-  enableDisableFields(currentElement)
-  {
-   this.hideAccumulate = currentElement.accumulate;
-   this.hideUserOverride = this.hideAccumulate;
-   if(currentElement.dataElement2.toUpperCase() === 'PH' ){
-
-   }
-  }
-  setORequired()
-  {
-    this.isOverNameRequired = !this.isOverNameRequired;
-  }
-  showAccDetails(){
-    this.showAccumulate = !this.showAccumulate;
-  }
-  onDelete() {
-    this.adminService.deleteDE(this.planNumber, this.selectedDEId).subscribe(delRes => {
-      if (delRes.status === APP_CONST.SUCCESS) {
-        this.router.navigate(['/admin/dataElements']);
-      }
-  });
-  }
-  saveDE()
-  {
-    this.newDataElement = this.updateOtionalDataForm.value;
-    console.log("this.newDataElement", this.newDataElement)
-    this.adminService.saveDE(this.planNumber, this.selectedDEId, this.isCreate).subscribe(saveRes => {
-      if (saveRes.status === APP_CONST.SUCCESS) {
-        this.router.navigate(['/admin/dataElements']);
-      }
-  });
 }
-  showOptions() {
-    this.router.navigate(['/admin/dataElements/options']);
-  }
-  showDeteleModal() {
-    this.modalService.open(this.modelId);
-  }
-  gotoBack() {
-    this.router.navigate([PayAdminGlobalState.previousPage]);
-  }
-  onClear() {
-    this.updateOtionalDataForm.reset();
-  }
-/*
-  get dataElement1() {
-    return this.updateOtionalDataForm.get('dataElement1');
-  }
-  get dataElement2() {
-    return this.updateOtionalDataForm.get('dataElement2');
-  }
-  get dataElement3() {
-    return this.updateOtionalDataForm.get('dataElement3');
-  }
-  get omniName() {
-    return this.updateOtionalDataForm.get('omniName');
-  }
-  get overrideName() {
-    return this.updateOtionalDataForm.get('overrideName');
-  }
-  get Enrollment() {
-    return this.updateOtionalDataForm.get('Enrollment');
-  }
-  get Participant() {
-    return this.updateOtionalDataForm.get('Participant');
-  }
-  get Contribution() {
-    return this.updateOtionalDataForm.get('Contribution');
-  }
-  get batchParticipant() {
-    return this.updateOtionalDataForm.get('batchParticipant');
-  }*/
-}
-===================
-<form [formGroup]="updateOtionalDataForm" class="voya-form form">
-
-  <div class="container">
-
-      <div class=form-row>
-          <div class="col-1">
-              <voya-textbox placeHolderText="" controlLabel="Data Element" id="dataElement1"
-              name="dataElement1" formControlName="dataElement1" controlName="dataElement1"  [control]="updateOtionalDataForm.controls['dataElement1']">
-              </voya-textbox>
-          </div>
-          <div class="col-1">
-              <voya-textbox placeHolderText="" controlLabel=""
-              name="dataElement2" formControlName="dataElement2" controlName="dataElement2"  [control]="updateOtionalDataForm.controls['dataElement2']">
-              </voya-textbox>
-          </div>
-          <div class="col-1">
-              <voya-textbox placeHolderText="" controlLabel=""
-              name="dataElement3" formControlName="dataElement3" controlName="dataElement3"  [control]="updateOtionalDataForm.controls['dataElement3']">
-              </voya-textbox>
-          </div>
-          <div class="col-1">
-              <div class="form__group">
-                  <label class="form__label form-label">(ex: PT PH 390)</label>
-
-              </div>
-          </div>
-      </div>
-
-
-
-      <div class="row">
-          <div class="col-3">
-              <voya-textbox placeHolderText="Standard Name" controlLabel="Standard Name" name="omniName" formControlName="omniName">
-              </voya-textbox>
-          </div>
-          <div class="col-3">
-              <voya-textbox placeHolderText="Override Name" controlLabel="Override Name" [controlDisabled]="hideUserOverride"
-               name="overrideName" formControlName="overrideName" [isRequired] ="isOverNameRequired" (click)="setORequired()">
-              </voya-textbox>
-          </div>
-          <div class="col-3 mt-4">
-              <voya-checkbox controlLabel="Use Override"
-               controlName="userOverride" formControlName="userOverride" controlClass="small" [controlDisabled]="hideUserOverride"
-              ></voya-checkbox>
-          </div>
-      </div>
-
-
-      <div class="row">
-          <div class="col-3">
-              <voya-select placeHolderText="Add/Enrollment" controlLabel="Add/Enrollment" formControlName="addEnrollment" controlName="addEnrollment"
-              [items]="addEnrollmentOptions" (changed)="onStateChange($event)"></voya-select>
-          </div>
-          <div class="col-3">
-              <voya-select placeHolderText="Participant" controlLabel="participant" formControlName="participant"  controlName="participant"
-              [items]="participantOptions" (changed)="onStateChange($event)"></voya-select>
-          </div>
-          <div class="col-3">
-              <voya-select placeHolderText="Contribution" controlLabel="contribution" formControlName="contribution" controlName="contribution"
-              [items]="contributionOptions" (changed)="onStateChange($event)"></voya-select>
-          </div>
-      </div>
-
-      <div class="row">
-          <div class="col-3">
-              <voya-select placeHolderText="Batch Participant" controlLabel="Batch Participant" formControlName="batchParticipant" [items]="batchParticipantOptions"
-                  (changed)="onStateChange($event)"></voya-select>
-          </div>
-      </div>
-
-      <div class="row">
-          <div class="col-3">
-              <voya-checkbox controlLabel="Accumulate"
-               controlName="accuUserOverride" formControlName="accuUserOverride" controlClass="small" [controlDisabled]="hideAccumulate" (click) = "showAccDetails()"></voya-checkbox>
-          </div>
-      </div>
-      <div class="row" *ngIf="showAccumulate">
-        <div class="col-3" >
-            <voya-textbox placeHolderText="Standard Name" controlLabel="Standard Name" name="omniName" formControlName="omniName">
-            </voya-textbox>
-        </div>
-        <div class="col-3">
-            <voya-textbox placeHolderText="Override Name" controlLabel="Override Name" [controlDisabled]="hideUserOverride"
-             name="overrideName" formControlName="overrideName" [isRequired] ="isOverNameRequired" (click)="setORequired()">
-            </voya-textbox>
-        </div>
-        <div class="col-3 mt-4">
-            <voya-checkbox controlLabel="Use Override"
-             controlName="userOverride" formControlName="userOverride" controlClass="small" [controlDisabled]="hideUserOverride"
-            ></voya-checkbox>
-        </div>
-    </div>
-      <div class="row content__nav ">
-
-          <div class="col-2">
-              <button type="submit" class="voya-button voya-button-theme-white" (click)="gotoBack()">Back</button>
-          </div>
-
-          <div class="col-2">
-              <button class="voya-button" (click)="saveDE()">OK</button>
-          </div>
-          <div class="col-2">
-            <button class="voya-button" (click)="onClear()">Clear</button>
-        </div>
-          <div class="col-2">
-              <button class="voya-button voya-button-theme-white" (click)="showDeteleModal()" [disabled]="isButtonDisabled">Delete</button>
-          </div>
-          <div class="col-2">
-              <button class="voya-button voya-button-theme-white" (click)="showOptions()" [disabled]="isButtonDisabled">Options</button>
-          </div>
-
-
-      </div>
-
-      <app-de-modal [deId] = "selectedDEId" [type]="type" [modelId] = "modelId"></app-de-modal>
-  </div>
-
-</form>
+---
+pattern="[A-Za-z]{2}"
