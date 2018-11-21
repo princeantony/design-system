@@ -1,45 +1,128 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { FormControl, FormGroup } from '@angular/forms';
 
-import { CommonService } from '../app/shared/services/common.service';
-import { PayAdminGlobalState } from './shared/store/pay-admin-global.store';
-import { Router } from '@angular/router';
+import { Router } from '../../../../../../node_modules/@angular/router';
+import { NgxSpinnerService } from '../../../../../../node_modules/ngx-spinner';
+import { APP_CONST, ENV, SUB_TITLE } from '../../../../shared/constants/app.constants';
+import { IPageList } from '../../../../shared/interfaces/page-list.interface';
+import { PayAdminGlobalState } from '../../../../shared/store/pay-admin-global.store';
+import { AdminPageSetupService } from '../../services/admin-page-setup.service';
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html'
+  selector: 'app-admin-page-security',
+  templateUrl: './admin-page-security.component.html',
+  styleUrls: ['./admin-page-security.component.scss']
 })
-export class AppComponent {
-  title = 'PayAdmin';
-  date = new Date().toLocaleDateString();
-  constructor(private commonService: CommonService,private router: Router,
-  ) {}
+export class AdminPageSecurityComponent implements OnInit {
+  planNumber: string;
+  subTitle : string;
+  pageList: Partial<IPageList>[];
+  pageFlags: any;
+  pageSecurityForm: FormGroup;
+  constructor(
+    private pageSetupService :  AdminPageSetupService,
+      private spinner: NgxSpinnerService,
+      private router: Router
+      ) { }
 
-  ngOnInit(): void {
-    if(PayAdminGlobalState.loginStatus) {
-       console.log('loginStatus is not empty')
-        if (!PayAdminGlobalState.stateList) {
-          console.log('stateList is not empty')
-      this.commonService.getStateList().subscribe(result => {
-        if (result.status === 'SUCCESS') {
-          PayAdminGlobalState.stateList = result.data;
-        }
-      });
-    }
-    if (!PayAdminGlobalState.countryList) {
-      console.log('countryList is not empty')
-      this.commonService.getCountryList().subscribe(result => {
-        if (result.status === 'SUCCESS') {
-          PayAdminGlobalState.countryList = result.data;
-        }
-      });
-    }
-    this.router.navigate(['/plans']);
-    }
-    else {
-      console.log('loginStatus is  empty')
-    this.router.navigate(['/']);
-    }
+  ngOnInit() {
+    PayAdminGlobalState.previousPage = "admin";
+    this.spinner.show();
+    this.planNumber = PayAdminGlobalState.planNumber;
+    this.subTitle = SUB_TITLE.PAGE_SECURITY;
+    if(ENV.TEST)
+    this.getMockPageSettings();
+    else
+    this.getPageSettings();
+    console.log("this.pageSecurityForm.value load", this.pageSecurityForm.value)
+  }
+  getMockPageSettings(){
+    this.pageSetupService.getMockPageSettings(this.planNumber).subscribe(flags => {
+      if(flags.status === APP_CONST.SUCCESS)
+      {
+        this.pageList = this.pageSetupService.getPageList(flags.data);
+        this.pageSecurityForm = this.buildFormGroup(this.pageList);
+        this.spinner.hide();
+      }
+    });
+  }
+  getPageSettings(){
+    this.pageSetupService.getPageSettings(this.planNumber).subscribe(flags => {
+      if(flags.status === APP_CONST.SUCCESS)
+      {
+        this.pageList = this.pageSetupService.getPageList(flags.data);
+        this.pageSecurityForm = this.buildFormGroup(this.pageList);
+        this.spinner.hide();
+      }
+    });
+  }
+
+  buildFormGroup(pageList: Partial<IPageList>[] ) {
+    let group: any = {};
+
+    pageList.forEach(page => {
+      group[page.key] = new FormControl(page.value || false);
+      if(page.subItems){
+        page.subItems.forEach(subPage =>{
+          group[subPage.key] = new FormControl(subPage.value || false);
+        });
+      }
+    });
+    return new FormGroup(group);
+  }
+ onMockSubmit()
+ {
+    this.router.navigate(["/home"]);
+ }
+ ShowHide(key)
+ {
+
+    const ctrName = key.controlName;
+    const value = this.pageSecurityForm.controls[key.controlName].value;
+
+if(ctrName === 'addEnrollmentPageActive' && value)
+{
+  this.pageSecurityForm.controls['addEnrollmentImportPageActive'].setValue(false);
+ // this.pageSecurityForm.removeControl('addEnrollmentImportPageActive');
+
+ // this.pageSecurityForm.addControl('addEnrollmentImportPageActive', new Fo}rmControl({ disabled: true});
+  console.log(this.pageSecurityForm.controls['addEnrollmentImportPageActive'])
+ // console.log(ctrName, value)
+//this.pageSecurityForm.controls['addEnrollmentImportPageActive'].setValue(true);
+//this.pageSecurityForm.controls['addEnrollmentImportPageActive'].disable();
+}
+
+ }
+
+  onSubmit(){
+    console.log("this.pageSecurityForm.value", this.pageSecurityForm.value)
+    if(ENV.TEST)
+    this.onMockSubmit();
+    else{
+    this.spinner.show();
+    this.pageSetupService.savePageSettings(this.pageSecurityForm.value,this.planNumber).subscribe(pageFlags => {
+      if(pageFlags.status === APP_CONST.SUCCESS)
+      {
+
+        this.spinner.hide();
+        this.router.navigate(["/home"]);
+      }
+    },(err => {console.log("Error in save page security", err);this.spinner.hide();}));
+
+  }
+  }
+  hidethis(value)
+{
+  if(!this.pageSecurityForm.controls['addEnrollmentPageActive'].value) {
+    setTimeout(() => {
+      this.pageSecurityForm.controls['addEnrollmentImportPageActive'].setValue(false);
+      //this.form.get('displayDOB').disable();
+    }, 1)
+  }
+
+  console.log(value,'value')
+}
+   gotoPrevious() {
+    this.router.navigate([PayAdminGlobalState.previousPage]);
   }
 }
----
-pattern="[A-Za-z]{2}"
