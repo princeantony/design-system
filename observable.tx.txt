@@ -1,128 +1,61 @@
-import { Component, OnInit } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
+AdminDataService.dataElementNewOrder = null;
+    let isValidOrder = true;
+    this.newOrderNumber = _.sortBy(this.newOrderNumber, ['order']);
 
-import { Router } from '../../../../../../node_modules/@angular/router';
-import { NgxSpinnerService } from '../../../../../../node_modules/ngx-spinner';
-import { APP_CONST, ENV, SUB_TITLE } from '../../../../shared/constants/app.constants';
-import { IPageList } from '../../../../shared/interfaces/page-list.interface';
-import { PayAdminGlobalState } from '../../../../shared/store/pay-admin-global.store';
-import { AdminPageSetupService } from '../../services/admin-page-setup.service';
+    if(_.size(_.find(this.newOrderNumber, ['order', ''])) !== _.size(this.newOrderNumber)){
+      _.forEach(this.newOrderNumber, function(value, index) {
+            if(parseInt(value.order, 10) !== parseInt(index, 0) + 1) {
 
-@Component({
-  selector: 'app-admin-page-security',
-  templateUrl: './admin-page-security.component.html',
-  styleUrls: ['./admin-page-security.component.scss']
-})
-export class AdminPageSecurityComponent implements OnInit {
-  planNumber: string;
-  subTitle : string;
-  pageList: Partial<IPageList>[];
-  pageFlags: any;
-  pageSecurityForm: FormGroup;
-  constructor(
-    private pageSetupService :  AdminPageSetupService,
-      private spinner: NgxSpinnerService,
-      private router: Router
-      ) { }
+              isValidOrder = false;
+              return false;
+          } else {
+          const _deToUpdateIndex = _.findIndex(AdminDataService.dataElements, ['optionalElementID', value.optionalElementID]);
+            const tempOrder = [{
+            'overrideSortOrder': value.order,
+            'objectID': AdminDataService.dataElements[_deToUpdateIndex].objectID,
+            'dataElement': AdminDataService.dataElements[_deToUpdateIndex].dataElement,
+            'subObjectID': AdminDataService.dataElements[_deToUpdateIndex].subObjectID,
+            'omniName': AdminDataService.dataElements[_deToUpdateIndex].omniName
 
-  ngOnInit() {
-    PayAdminGlobalState.previousPage = "admin";
+            }];
+            AdminDataService.dataElementNewOrder =  _.unionWith(AdminDataService.dataElementNewOrder, tempOrder);
+          }
+      });
+    }
+     if(!isValidOrder) {
+      this.toastr.error('Check the new sequence number, the number may be duplicated, skipped or out of the range.' ,'Validation failed!', {
+        showCloseButton: true, toastLife: 60000, position : 'toast-top-right'
+      });
+  } else if(_.size(_.find(this.newOrderNumber, ['order', ''])) !== _.size(this.newOrderNumber)){
     this.spinner.show();
-    this.planNumber = PayAdminGlobalState.planNumber;
-    this.subTitle = SUB_TITLE.PAGE_SECURITY;
-    if(ENV.TEST)
-    this.getMockPageSettings();
-    else
-    this.getPageSettings();
-    console.log("this.pageSecurityForm.value load", this.pageSecurityForm.value)
+    this.adminService
+      .updateOrderNumber(this.planNumber, AdminDataService.dataElementNewOrder)
+      .subscribe(
+        saveRes => {
+          AdminDataService.dataElementNewOrder = null;
+          this.spinner.hide();
+          if (saveRes.status === APP_CONST.SUCCESS) {
+            AdminDataService.successMsg = 'Plan Optional Data Elements successfully updated';
+            this.router.navigate(['/admin']);
+          } else {
+            console.log('Error in save order', saveRes);
+            this.toastr.error(saveRes.error.msg, saveRes.status + ' !', {
+              showCloseButton: true
+            });
+          }
+        },
+        err => {
+          AdminDataService.dataElementNewOrder = null;
+          this.spinner.hide();
+          console.log('Error in save order outside', err);
+          this.toastr.error(
+            'Error while saving display order !',
+            err.error.status + ' !',
+            { showCloseButton: true }
+          );
+        }
+      );
+  } else {
+    AdminDataService.successMsg = 'Plan Optional Data Elements successfully updated';
+    this.router.navigate(['/admin']);
   }
-  getMockPageSettings(){
-    this.pageSetupService.getMockPageSettings(this.planNumber).subscribe(flags => {
-      if(flags.status === APP_CONST.SUCCESS)
-      {
-        this.pageList = this.pageSetupService.getPageList(flags.data);
-        this.pageSecurityForm = this.buildFormGroup(this.pageList);
-        this.spinner.hide();
-      }
-    });
-  }
-  getPageSettings(){
-    this.pageSetupService.getPageSettings(this.planNumber).subscribe(flags => {
-      if(flags.status === APP_CONST.SUCCESS)
-      {
-        this.pageList = this.pageSetupService.getPageList(flags.data);
-        this.pageSecurityForm = this.buildFormGroup(this.pageList);
-        this.spinner.hide();
-      }
-    });
-  }
-
-  buildFormGroup(pageList: Partial<IPageList>[] ) {
-    let group: any = {};
-
-    pageList.forEach(page => {
-      group[page.key] = new FormControl(page.value || false);
-      if(page.subItems){
-        page.subItems.forEach(subPage =>{
-          group[subPage.key] = new FormControl(subPage.value || false);
-        });
-      }
-    });
-    return new FormGroup(group);
-  }
- onMockSubmit()
- {
-    this.router.navigate(["/home"]);
- }
- ShowHide(key)
- {
-
-    const ctrName = key.controlName;
-    const value = this.pageSecurityForm.controls[key.controlName].value;
-
-if(ctrName === 'addEnrollmentPageActive' && value)
-{
-  this.pageSecurityForm.controls['addEnrollmentImportPageActive'].setValue(false);
- // this.pageSecurityForm.removeControl('addEnrollmentImportPageActive');
-
- // this.pageSecurityForm.addControl('addEnrollmentImportPageActive', new Fo}rmControl({ disabled: true});
-  console.log(this.pageSecurityForm.controls['addEnrollmentImportPageActive'])
- // console.log(ctrName, value)
-//this.pageSecurityForm.controls['addEnrollmentImportPageActive'].setValue(true);
-//this.pageSecurityForm.controls['addEnrollmentImportPageActive'].disable();
-}
-
- }
-
-  onSubmit(){
-    console.log("this.pageSecurityForm.value", this.pageSecurityForm.value)
-    if(ENV.TEST)
-    this.onMockSubmit();
-    else{
-    this.spinner.show();
-    this.pageSetupService.savePageSettings(this.pageSecurityForm.value,this.planNumber).subscribe(pageFlags => {
-      if(pageFlags.status === APP_CONST.SUCCESS)
-      {
-
-        this.spinner.hide();
-        this.router.navigate(["/home"]);
-      }
-    },(err => {console.log("Error in save page security", err);this.spinner.hide();}));
-
-  }
-  }
-  hidethis(value)
-{
-  if(!this.pageSecurityForm.controls['addEnrollmentPageActive'].value) {
-    setTimeout(() => {
-      this.pageSecurityForm.controls['addEnrollmentImportPageActive'].setValue(false);
-      //this.form.get('displayDOB').disable();
-    }, 1)
-  }
-
-  console.log(value,'value')
-}
-   gotoPrevious() {
-    this.router.navigate([PayAdminGlobalState.previousPage]);
-  }
-}
