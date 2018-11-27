@@ -1,61 +1,25 @@
-AdminDataService.dataElementNewOrder = null;
-    let isValidOrder = true;
-    this.newOrderNumber = _.sortBy(this.newOrderNumber, ['order']);
+<footer class="footer">
+	<div class="d-flex flex-grow-1">
+		<div>
+			<p>&copy; 2018 Voya Institutional Plan Services, LLC. All Rights Reserved.</p>
+			<p>Voya and Voya logo are registered trademarks of Voya Services Company.
+				<a class="pl-1 voya-link text-small" (click)="openModal('footerMod')">Click here for supported browsers</a>
+			</p>
+		</div>
+	</div>
+</footer>
+<app-browser-info></app-browser-info>
 
-    if(_.size(_.find(this.newOrderNumber, ['order', ''])) !== _.size(this.newOrderNumber)){
-      _.forEach(this.newOrderNumber, function(value, index) {
-            if(parseInt(value.order, 10) !== parseInt(index, 0) + 1) {
 
-              isValidOrder = false;
-              return false;
-          } else {
-          const _deToUpdateIndex = _.findIndex(AdminDataService.dataElements, ['optionalElementID', value.optionalElementID]);
-            const tempOrder = [{
-            'overrideSortOrder': value.order,
-            'objectID': AdminDataService.dataElements[_deToUpdateIndex].objectID,
-            'dataElement': AdminDataService.dataElements[_deToUpdateIndex].dataElement,
-            'subObjectID': AdminDataService.dataElements[_deToUpdateIndex].subObjectID,
-            'omniName': AdminDataService.dataElements[_deToUpdateIndex].omniName
+---------------------------
+ delimiter = '-'; in time-info
+--------------------
+paln setup-[disable] to [controldisabled]
 
-            }];
-            AdminDataService.dataElementNewOrder =  _.unionWith(AdminDataService.dataElementNewOrder, tempOrder);
-          }
-      });
-    }
-     if(!isValidOrder) {
-      this.toastr.error('Check the new sequence number, the number may be duplicated, skipped or out of the range.' ,'Validation failed!', {
-        showCloseButton: true, toastLife: 60000, position : 'toast-top-right'
-      });
-  } else if(_.size(_.find(this.newOrderNumber, ['order', ''])) !== _.size(this.newOrderNumber)){
-    this.spinner.show();
-    this.adminService
-      .updateOrderNumber(this.planNumber, AdminDataService.dataElementNewOrder)
-      .subscribe(
-        saveRes => {
-          AdminDataService.dataElementNewOrder = null;
-          this.spinner.hide();
-          if (saveRes.status === APP_CONST.SUCCESS) {
-            AdminDataService.successMsg = 'Plan Optional Data Elements successfully updated';
-            this.router.navigate(['/admin']);
-          } else {
-            console.log('Error in save order', saveRes);
-            this.toastr.error(saveRes.error.msg, saveRes.status + ' !', {
-              showCloseButton: true
-            });
-          }
-        },
-        err => {
-          AdminDataService.dataElementNewOrder = null;
-          this.spinner.hide();
-          console.log('Error in save order outside', err);
-          this.toastr.error(
-            'Error while saving display order !',
-            err.error.status + ' !',
-            { showCloseButton: true }
-          );
-        }
-      );
-  } else {
-    AdminDataService.successMsg = 'Plan Optional Data Elements successfully updated';
-    this.router.navigate(['/admin']);
+---------------
+header.html and ts
+ <a (click)="closeWindow()">Exit</a>
+ closeWindow()
+  {
+    this.router.navigate(['/index.html']);
   }
