@@ -1,25 +1,27 @@
-<footer class="footer">
-	<div class="d-flex flex-grow-1">
-		<div>
-			<p>&copy; 2018 Voya Institutional Plan Services, LLC. All Rights Reserved.</p>
-			<p>Voya and Voya logo are registered trademarks of Voya Services Company.
-				<a class="pl-1 voya-link text-small" (click)="openModal('footerMod')">Click here for supported browsers</a>
-			</p>
-		</div>
-	</div>
-</footer>
-<app-browser-info></app-browser-info>
+2. If loan matching is checked then loan payoff is enabled
+3. If loan matching is not checked loan payoff is disabled
+4. Leave of absence is displayed only when user is ID user
+5. Enrollment Status Codes will be enabled or disabled based showDropdown.
+6. deferral catchup option in money sources will be enabled based on showCatchUpOptions
+7. Enrollment options cannot be null or empty
+8. Participant update option cannot be null or empty
+9. New Enrollment Status Code,Enrollment Option, Participant Update Option will be showed based on showDropdown
+10. CatchupOptions drop down will be enabled based on showCatchUpOptions
+11. if catchup options in not "N" check atleast one of catup from money sources is selected
+12. numPretaxSrcSelected,numRothSrcSelected fields from plan sources will be part of validation
+13. catchup and exlude both cannot be selected for a money source;(user has to confirm  when  catchup and exlude both are  selected to continue)
+14. only pretax and roth sources can be selected for catchup(this involves discussion, will be added later as I understand more)
+15. Only one Pre-tax source can be elected for Catch-up
+16. Only one Roth source can be elected for Catch-up
+17. money sources contributionCatchup will be enabled based on showCatchUpOptions
+14,15,16 involve logic but better having then in client side also (will explain the logics as we start development)
+Other validations will be handled in server, as they involve logic
+Custom mask should contain either of 3 charaters 9,x,X repeated, total number of digits are 9 EX:999xxxXXX
+18. Either a Catch-up Deferral Source or select No Catch-up elections in the Catch-up Option
+19.custom mask text box should be disable if any one of the below radio button is clicked
+Standard Mask Left , Standard Mask Right , No Mask 
+20.custom mask text box should be enable only if custom mask radio button is enabled
+21. Email id has two values in drop down first is no email which is static and the second is VR151,VR152 if the division of user is RSD  else PH155,PH156 
+22.New Enrollment Status Code, Enrollment Option  and Participant Update is enabled based on autoEnrollFlag and if they are not non-windsor plan
+(autoEnrollFlag is boolean using by back end logic)
 
-
----------------------------
- delimiter = '-'; in time-info
---------------------
-paln setup-[disable] to [controldisabled]
-
----------------
-header.html and ts
- <a (click)="closeWindow()">Exit</a>
- closeWindow()
-  {
-    this.router.navigate(['/index.html']);
-  }
