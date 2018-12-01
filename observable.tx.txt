@@ -25,3 +25,6 @@ Standard Mask Left , Standard Mask Right , No Mask
 22.New Enrollment Status Code, Enrollment Option  and Participant Update is enabled based on autoEnrollFlag and if they are not non-windsor plan
 (autoEnrollFlag is boolean using by back end logic)
 
+bank confirmstiion page footer line
+Clear button on plan settings
+date and time on the bank confirmation page
