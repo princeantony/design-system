@@ -28,3 +28,8 @@ Standard Mask Left , Standard Mask Right , No Mask
 bank confirmstiion page footer line
 Clear button on plan settings
 date and time on the bank confirmation page
+
+
+
+$fa-font-path: "/assets/font-awesome/fonts";
+@import "../../assets/font-awesome/scss/font-awesome";
