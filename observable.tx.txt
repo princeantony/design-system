@@ -25,11 +25,51 @@ Standard Mask Left , Standard Mask Right , No Mask
 22.New Enrollment Status Code, Enrollment Option  and Participant Update is enabled based on autoEnrollFlag and if they are not non-windsor plan
 (autoEnrollFlag is boolean using by back end logic)
 
-bank confirmstiion page footer line
-Clear button on plan settings
-date and time on the bank confirmation page
 
+=============
 
+getPageList(pageFlag: any) : Partial<IPageList>[] {
+    const pagesToBind: Partial<IPageList>[] = [];
+    PageListItems.forEach(page => {
+      if(page.key ===  'addEnrollmentPageActive') {
+        if (pageFlag['disableAdd']) {
+          page.isDisabled = true;
+        }
+      } else if(page.key ===  'batchParticipantUpdatePageActive') {
+        if (pageFlag['disablebatch']) {
+          page.isDisabled = true;
+        }
+      }
+      if (pageFlag[page.key] && !page.isDisabled ) {
+        page.value = true;
+      } else {
+        page.value = false;
+      }
 
-$fa-font-path: "/assets/font-awesome/fonts";
-@import "../../assets/font-awesome/scss/font-awesome";
+       if (page.subItems) {
+        page.subItems.forEach(subPage => {
+          if (pageFlag[subPage.key]) {
+            subPage.value = true;
+          } else {
+            subPage.value = false;
+          }
+        });
+      }
+      pagesToBind.push(page);
+    });
+
+    return pagesToBind;
+  }
+  
+  ===
+  mock
+  --
+      disableAdd: false,
+disablebatch: true
+
+----
+interfacec
+isDisabled: boolean;
+
+in config
+    isDisabled: false,
