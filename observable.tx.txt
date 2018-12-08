@@ -28,48 +28,473 @@ Standard Mask Left , Standard Mask Right , No Mask
 
 =============
 
-getPageList(pageFlag: any) : Partial<IPageList>[] {
-    const pagesToBind: Partial<IPageList>[] = [];
-    PageListItems.forEach(page => {
-      if(page.key ===  'addEnrollmentPageActive') {
-        if (pageFlag['disableAdd']) {
-          page.isDisabled = true;
-        }
-      } else if(page.key ===  'batchParticipantUpdatePageActive') {
-        if (pageFlag['disablebatch']) {
-          page.isDisabled = true;
-        }
-      }
-      if (pageFlag[page.key] && !page.isDisabled ) {
-        page.value = true;
-      } else {
-        page.value = false;
-      }
+import { Component, OnDestroy, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
+import { Router } from '@angular/router';
+import { AgGridNg2 } from 'ag-grid-angular';
+import _ from 'lodash';
+import { NgxSpinnerService } from 'ngx-spinner';
+import { ModalService } from 'src/app/shared/services/modal.service';
 
-       if (page.subItems) {
-        page.subItems.forEach(subPage => {
-          if (pageFlag[subPage.key]) {
-            subPage.value = true;
-          } else {
-            subPage.value = false;
-          }
-        });
-      }
-      pagesToBind.push(page);
-    });
+import { FormBuilder, FormControl, FormGroup } from '../../../../../../node_modules/@angular/forms';
+import {
+  CatchUpOptions,
+  DivLocationOptons,
+  EmailDEOptions,
+  EntrollmentOptions,
+  ParticipantUpdateOptions,
+  PinLenthOptions,
+} from '../../../../shared/config/plan-options.config';
+import { ADMIN_CONFIG, APP_CONST, SUB_TITLE } from '../../../../shared/constants/app.constants';
+import { GRID_CONFIG } from '../../../../shared/constants/grid.constants';
+import { IListItem } from '../../../../shared/interfaces/list-item.interface';
+import { ToastrService } from '../../../../shared/services/toastr.service';
+import { PayAdminGlobalState } from '../../../../shared/store/pay-admin-global.store';
+import { getVoyaSelectItem } from '../../../../shared/utils/pay-admin.utils';
+import { AdminDataService } from '../../services/admin-data.service';
+import { AdminPlanSetupService } from '../../services/admin-plan-setup.service';
 
-    return pagesToBind;
+@Component({
+  selector: 'app-admin-plan-setup',
+  templateUrl: './admin-plan-setup.component.html',
+  styleUrls: ['./admin-plan-setup.component.scss']
+})
+export class AdminPlanSetupComponent implements OnInit, OnDestroy {
+  @ViewChild('agGrid') agGrid: AgGridNg2;
+  planNumber: string;
+  pageTitle: string;
+  planSetupResponse: any;
+  context: any;
+  moneySourcesColumnDefs: any;
+  investmentsColumnDefs: any;
+  planUpdateForm: FormGroup;
+  isCustomMask: boolean;
+  nameChangeAllowed: boolean;
+  ssnTypeItems: any;
+  loanMatching: boolean;
+  moneySourceData: any;
+  investmentData: any;
+  initialMoneySourceData: any;
+  initailInvestmentData: any;
+  private gridApi;
+  shouldDisabled = false;
+  modelId: string;
+  participantsItmes: any;
+  pinLengthItems: any;
+  emailIDItems: any;
+  enrollmentOptions: any;
+  enrollStatusItems: any;
+  divLocItems: any;
+  catchUpItems: any;
+  frameworkComponents: any;
+  planOptions: any;
+  enrollmentStatusCodeItems: IListItem[];
+  emailIDEItems: any;
+  popupTitle: string;
+  private gridColumnApi;
+  roths: any;
+  preTaxs: any;
+  pageLoaded = false;
+  rothCount = 0;
+  preTaxCount = 0;
+  style;
+  constructor(
+    private planSetupService: AdminPlanSetupService,
+    private fb: FormBuilder,
+    private router: Router,
+    private adminDataService: AdminDataService,
+    private modalService: ModalService,
+    private spinner: NgxSpinnerService,
+    private toastrService: ToastrService,
+    vcr: ViewContainerRef
+  ) {
+    this.toastrService.toastr.setRootViewContainerRef(vcr);
+    this.style = { width: '94%' };
+    this.pageTitle = SUB_TITLE.UPDATE_PLAN;
+    this.moneySourcesColumnDefs =
+      GRID_CONFIG.PLAN_UPDATE.COLUMN_DEFS_MONEY_SOURCES;
+    this.investmentsColumnDefs =
+      GRID_CONFIG.PLAN_UPDATE.COLUMN_DEFS_INVESTMENTS;
+    this.ssnTypeItems = ADMIN_CONFIG.SSN_ITEMS;
   }
-  
-  ===
-  mock
-  --
-      disableAdd: false,
-disablebatch: true
 
-----
-interfacec
-isDisabled: boolean;
+  ngOnInit() {
+    this.participantsItmes = ParticipantUpdateOptions;
+    this.pinLengthItems = PinLenthOptions;
+    this.emailIDItems = EmailDEOptions;
+    this.enrollmentOptions = EntrollmentOptions;
+    this.divLocItems = DivLocationOptons;
+    this.catchUpItems = CatchUpOptions;
+    this.planNumber = PayAdminGlobalState.planNumber;
 
-in config
-    isDisabled: false,
+    this.spinner.show();
+    this.getPlanSetup();
+  }
+
+  onRadioClick(value: string) {
+    this.isCustomMask = value === ADMIN_CONFIG.CUSTOM_MASK_VALUE ? true : false;
+  }
+  onGridReady(params) {
+    this.gridApi = params.api;
+    this.gridColumnApi = params.columnApi;
+  }
+
+  createFormGroup(form) {
+    this.shouldDisabled = !form.loanMatching;
+
+    this.planUpdateForm = this.fb.group({
+      loanMatching: new FormControl(form.loanMatching),
+      loanPayoffs: new FormControl({
+        value: form.loanPayoffs,
+        disabled: !form.loanMatching
+      }),
+      nonACH: new FormControl(form.nonACH),
+      copyPayroll: new FormControl(form.copyPayroll),
+      crossCalendarPayroll: new FormControl(form.crossCalendarPayroll),
+      negativeContrib: new FormControl(form.negativeContrib),
+      disActPartWContrib: new FormControl(form.disActPartWContrib),
+      maskSSN: new FormControl(form.maskSSN),
+      customMask: new FormControl(form.customMask),
+      nameChange: new FormControl(form.nameChange),
+      submitBatchesInAdvance: new FormControl(form.submitBatchesInAdvance),
+      catchUp: new FormControl(form.catchUp),
+      participantUpdate: new FormControl(form.participantUpdate),
+      emailDE: new FormControl(form.emailDE),
+      divLocFunc: new FormControl(form.divLocFunc),
+      enrollment: new FormControl(form.enrollment),
+      leaveOfAbsence: new FormControl(form.leaveOfAbsence),
+      lastChangedBy: new FormControl(form.lastChangedBy),
+      pinLength: new FormControl(form.pinLength),
+      enrollmentStatusCode: new FormControl(form.enrollmentStatusCode),
+      reportsFolder: new FormControl(form.reportsFolder)
+    });
+    if (form.maskSSN === ADMIN_CONFIG.CUSTOM_MASK_VALUE) {
+      this.isCustomMask = true;
+    }
+  }
+  toggleCustomMask(value) {
+    if (value) {
+      this.isCustomMask = true;
+    } else {
+      this.isCustomMask = false;
+    }
+  }
+  enableLoanPayoff(value: any) {
+    this.shouldDisabled = !value;
+    this.planUpdateForm.controls['loanPayoffs'].setValue(false);
+  }
+  getPlanSetup() {
+    this.planSetupService.getPlanSetup(this.planNumber).subscribe(
+      planSetup => {
+        if (planSetup.status === APP_CONST.SUCCESS) {
+          this.planSetupResponse = planSetup.data;
+          this.createFormGroup(planSetup.data);
+          this.getMoneySource();
+        }
+      },
+      err => {
+        console.log('Error in plan setup load', err);
+        this.toastrService.showError(
+          err.error.error.msg,
+          err.error.error.status + ' !'
+        );
+        this.spinner.hide();
+      }
+    );
+  }
+  getMoneySource() {
+    this.planSetupService.getMoneySource(this.planNumber).subscribe(
+      money => {
+        if (money.status === APP_CONST.SUCCESS) {
+          this.moneySourceData =this.mergeObjects(this.planSetupResponse.moneySources,money.data);
+          this.initialMoneySourceData = JSON.parse(
+            JSON.stringify(this.moneySourceData)
+          );
+          PayAdminGlobalState.moneySource = this.moneySourceData;
+          this.getInvestments();
+        }
+      },
+      err => {
+        console.log('Error in money source load', err);
+        this.toastrService.showError(
+          err.error.error.msg,
+          err.error.error.status + ' !'
+        );
+        this.spinner.hide();
+      }
+    );
+  }
+  getInvestments() {
+    this.planSetupService.getInvestments(this.planNumber).subscribe(
+      investments => {
+        if (investments.status === APP_CONST.SUCCESS) {
+          this.investmentData = this.mergeObjects(this.planSetupResponse.investments, investments.data);
+          this.initailInvestmentData = JSON.parse(
+            JSON.stringify(this.investmentData)
+          );
+          PayAdminGlobalState.investments = this.investmentData;
+          this.getOptions();
+        }
+      },
+      err => {
+        this.toastrService.showError(
+          err.error.error,
+          err.error.error.status + ' !'
+        );
+        console.log('Error in money source load', err);
+        this.spinner.hide();
+      }
+    );
+  }
+  getOptions() {
+    this.planSetupService.getOptions(this.planNumber).subscribe(
+      options => {
+        if (options.status === APP_CONST.SUCCESS) {
+          this.planOptions = options.data;
+          PayAdminGlobalState.isCatchUp = this.planOptions.showCatchUpOptions;
+          this.emailIDEItems = this.getEmailDEItems(this.planOptions.rsd);
+          this.getEnrollmentList();
+          this.spinner.hide();
+          this.pageLoaded = true;
+        }
+      },
+      err => {
+        this.toastrService.showError(
+          err.error.error.msg,
+          err.error.error.status + ' !'
+        );
+        console.log('Error in Plan option call', err);
+        this.spinner.hide();
+      }
+    );
+  }
+  getEnrollmentList() {
+    this.planSetupService.getEnrollmentList(this.planNumber).subscribe(
+      enrollments => {
+        if (enrollments.status === APP_CONST.SUCCESS) {
+          this.enrollmentStatusCodeItems = getVoyaSelectItem(enrollments.data);
+          this.spinner.hide();
+          this.pageLoaded = true;
+         // this.getPlanSource();
+        }
+      },
+      err => {
+        this.toastrService.showError(
+          err.error.error.msg,
+          err.error.error.status + '!'
+        );
+        console.log('Error in Plan option call', err);
+        this.spinner.hide();
+      }
+    );
+  }
+  // getPlanSource() {
+  //   this.planSetupService.getPlanSource(this.planNumber).subscribe(
+  //     pSource => {
+  //       if (pSource.status === APP_CONST.SUCCESS) {
+  //         const newSetup = this.mergeObjects(pSource.data, this.moneySourceData);
+  //         debugger;
+  //         this.roths = _.filter(pSource.data, ['rothSource', true]);
+  //         this.preTaxs = _.filter(pSource.data, ['preTaxSource', true]);
+  //         this.spinner.hide();
+  //         this.pageLoaded = true;
+  //       }
+  //     },
+  //     err => {
+  //       this.toastrService.showError(
+  //         err.error.error.msg,
+  //         err.error.error.status + '!'
+  //       );
+  //       console.log('Error in Plan option call', err);
+  //       this.spinner.hide();
+  //     }
+  //   );
+  // }
+  getEmailDEItems(isRsa: boolean): any {
+    let _emailOptions: { value: string; displayText: string }[];
+    if (isRsa) {
+      _emailOptions = [_.find(EmailDEOptions, ['value', 'VR151'])];
+    } else {
+      _emailOptions = [_.find(EmailDEOptions, ['value', 'PH155'])];
+    }
+    _emailOptions.push({ value: '', displayText: 'No Email' });
+    return _emailOptions;
+  }
+  onSubmit() {
+    let isValidForm = true;
+    let updatedSources = [];
+    let updatedInvestments = [];
+    let planSetupData = this.planUpdateForm.value;
+    // updated moneysource details will attach to the main object
+    _.forEach(this.moneySourceData, function(source) {
+      updatedSources.push(_.omit(source, ['longName', 'shortName']));
+    });
+    if (this.planOptions.showCatchUpOptions && planSetupData.catchUp !== 'N') {
+      const hasCatchup = _.find(updatedSources, ['deferralCatchUp', true]);
+      if (!hasCatchup) {
+        isValidForm = false;
+        this.toastrService.showError(
+          'Select a Catch-up Deferral Source or select No Catch-up elections in the Catch-up Option',
+          'Catch-up Option'
+        );
+      }
+    }
+    if (isValidForm) {
+      // updated investments details will attach to the main object
+      _.forEach(this.investmentData, function(investment) {
+        updatedInvestments.push(_.omit(investment, ['longName']));
+      });
+      _.assign(planSetupData, { moneySources: updatedSources });
+      _.assign(planSetupData, { investments: updatedInvestments });
+      console.log('planSetupData', planSetupData);
+      this.spinner.show();
+      this.planSetupService
+        .savePlanSetup(this.planNumber, planSetupData)
+        .subscribe(
+          saveStatus => {
+            this.spinner.hide();
+            if (saveStatus.status === APP_CONST.SUCCESS) {
+              planSetupData = null;
+              updatedSources = null;
+              updatedInvestments = null;
+              PayAdminGlobalState.moneySource = null;
+              PayAdminGlobalState.investments = null;
+              this.moneySourceData = null;
+              this.investmentData = null;
+              this.planSetupResponse = null;
+              AdminDataService.successMsg =
+                'Plan General Information successfully updated';
+              this.router.navigate(['/admin']);
+            } else {
+              this.toastrService.showError(
+                saveStatus.error.msg,
+                saveStatus.status + ' !'
+              );
+            }
+          },
+          err => {
+            console.log('Error in plan save', err.error.error.msg);
+            this.toastrService.showError(
+              err.error.error.msg,
+              err.error.error.status + '!'
+            );
+            this.spinner.hide();
+          }
+        );
+    }
+  }
+  mergeObjects(parentObj, childObj) {
+    return this.planSetupService.mergeObjects(parentObj,childObj);
+  }
+  // genereateInvestmentTableData() {
+  //   return this.planSetupService.mergeObjects(
+  //     this.planSetupResponse.investments,
+  //     this.investments
+  //   );
+  // }
+  // appendRothAndPreTax() {
+  //   return this.planSetupService.mergeObjects(
+  //     this.planSetupResponse.investments,
+  //     this.investments
+  //   );
+  // }
+
+  gotoBack() {
+    this.router.navigate(['/admin']);
+  }
+  ngOnDestroy() {
+    PayAdminGlobalState.bankinfo = null;
+  }
+  showParticipantPopup() {
+    this.modelId = 'participant';
+    this.popupTitle = 'Participant Update Option';
+    this.modalService.open('plansteup');
+  }
+  showCatchupPopup() {
+    this.modelId = 'catchup';
+    this.popupTitle = 'Catch-up Option';
+    this.modalService.open('plansteup');
+  }
+  showEnrollPopup() {
+    this.popupTitle = 'Enrollment Option';
+    this.modelId = 'enroll';
+    this.modalService.open('plansteup');
+  }
+  getSelectedRow(clickedRow) {
+
+
+    const item = {};
+    item[clickedRow.item.fieldName] = clickedRow.item.fieldValue;
+    if (clickedRow.item.gridName === 'money') { // if the user clicked on any one of the checkbox in moneysource grid
+      if (clickedRow.item.fieldName === 'deferralCatchUp') { // if the user click on the 'differral catchup' column
+        if (this.moneySourceData[clickedRow.item.rowIndex].rothSource) { // if the selected row is having Roth property true
+          if (clickedRow.item.fieldValue) { // if user checked on
+            this.rothCount++; // always increment by 1
+          } else {
+            this.rothCount--; // if user checked off; always decrease by 1
+          }
+        } else if (this.moneySourceData[clickedRow.item.rowIndex].preTaxSource) { // if the selected row is having pre tax property true
+          if (clickedRow.item.fieldValue) {
+            this.preTaxCount++; // always increment by 1
+          } else {
+            this.preTaxCount--; // if user checked off; always decrease by 1
+          }
+        } else if (clickedRow.item.fieldValue) { // if user clicked on the 'differral catchup' column apart from Roth or Pre-tax
+          clickedRow.item.obj.checked = false; // should not allow to checked on
+          // the below toastr message may need to change as popup or screen error message on top
+          this.toastrService.showError(
+            'Only Pre-tax and Roth sources can be elected for Catch-up',
+            'Pre-tax - Roth'
+          );
+        }
+        if (this.rothCount > 1) { // if user selected 2nd Roth check box
+          clickedRow.item.obj.checked = false; // not allow to be checked on
+          this.rothCount--; // decrease by 1 due to not allowing to select
+          this.toastrService.showError(
+            'Only one Roth source can be elected for Catch-up',
+            'Roth'
+          );
+        } else if (this.preTaxCount > 1) { // if user selected 2nd pre-tax check box
+          clickedRow.item.obj.checked = false;  // not allow to be checked on
+          this.preTaxCount--; // decrease by 1 due to not allowing to select
+          this.toastrService.showError(
+            'Only one Pre-tax source can be elected for Catch-up',
+            'Pre-tax'
+          );
+        } else {
+          // if user select Roth or/and Pre-tax checkboxes, then update the main object which is used to bind the moneysouce grid
+          Object.assign(this.moneySourceData[clickedRow.item.rowIndex], item);
+        }
+      }
+    } else {
+      // if user select any checkboxes in the investment grid, then update the main object which is used to bind the investment grid
+      Object.assign(this.investmentData[clickedRow.item.rowIndex], item);
+    }
+  }
+  clearFields() {
+    this.enrollmentStatusCodeItems = JSON.parse(
+      JSON.stringify(this.enrollmentStatusCodeItems)
+    );
+    this.planSetupResponse = JSON.parse(JSON.stringify(this.planSetupResponse));
+    this.createFormGroup(this.planSetupResponse);
+    this.moneySourceData = JSON.parse(
+      JSON.stringify(this.initialMoneySourceData)
+    );
+    this.investmentData = JSON.parse(
+      JSON.stringify(this.initailInvestmentData)
+    );
+    PayAdminGlobalState.moneySource = this.moneySourceData;
+    PayAdminGlobalState.investments = this.investmentData;
+    this.rothCount = 0;
+    this.preTaxCount = 0;
+  }
+}
+
+======================
+
+1) ie - bankinfo add new popup continue is not working
+2) checkbox 
+2) shor name in money is 12
+3) long name in ivst is 60
+4) custm mask can be 9 or x - should visible always
+5) no email shoul dbve first 
+
