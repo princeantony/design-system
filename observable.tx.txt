@@ -1,10 +1,4 @@
-
-======================
-
-1) ie - bankinfo add new popup continue is not working
-2) checkbox 
-2) shor name in money is 12
-3) long name in ivst is 60
-4) custm mask can be 9 or x - should visible always
-5) no email shoul dbve first 
-
+mock service pipe delay
+payadmin common service to be removed
+cleanup model service
+devtool to be removed from app.module
