@@ -556,3 +556,9 @@ export class AdminPlanSetupComponent implements OnInit, OnDestroy {
     this.preTaxCount = 0;
   }
 }
+============
+
+ this.reportHeadings.forEach((heading, index) => {
+      this.reportHeadings[index]['columnName'] = heading.name;
+    });
+    const newobj =  _.merge(this.reportHeadings, this.reportData);
