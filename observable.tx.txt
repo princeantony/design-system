@@ -2,7 +2,13 @@
 devtool to be removed from app.module
 ===================
 
-import { Component, OnDestroy, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
+import {
+  Component,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+  ViewContainerRef
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { AgGridNg2 } from 'ag-grid-angular';
 import _ from 'lodash';
@@ -10,16 +16,25 @@ import { NgxSpinnerService } from 'ngx-spinner';
 import { AlertMessage } from 'src/app/shared/interfaces/alert.interface';
 import { ModalService } from 'src/app/shared/services/modal.service';
 
-import { FormBuilder, FormControl, FormGroup, Validators } from '../../../../../../node_modules/@angular/forms';
+import {
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  Validators
+} from '../../../../../../node_modules/@angular/forms';
 import {
   CatchUpOptions,
   DivLocationOptons,
   EmailDEOptions,
   EntrollmentOptions,
   ParticipantUpdateOptions,
-  PinLenthOptions,
+  PinLenthOptions
 } from '../../../../shared/config/plan-options.config';
-import { ADMIN_CONFIG, APP_CONST, SUB_TITLE } from '../../../../shared/constants/app.constants';
+import {
+  ADMIN_CONFIG,
+  APP_CONST,
+  SUB_TITLE
+} from '../../../../shared/constants/app.constants';
 import { GRID_CONFIG } from '../../../../shared/constants/grid.constants';
 import { IListItem } from '../../../../shared/interfaces/list-item.interface';
 import { ToastrService } from '../../../../shared/services/toastr.service';
@@ -77,7 +92,7 @@ export class AdminPlanSetupComponent implements OnInit, OnDestroy {
   currentCheckBox: any;
   showConfirm = false;
   currentRow = 0;
-  currentItem : any;
+  currentItem: any;
   style;
   alertMessage: AlertMessage = new AlertMessage();
 
@@ -319,10 +334,16 @@ export class AdminPlanSetupComponent implements OnInit, OnDestroy {
       updatedSources.push(_.omit(source, ['longName', 'shortName']));
     });
     if (this.planOptions.showCatchUpOptions && planSetupData.catchUp !== 'N') {
-      const hasCatchup = _.find(this.moneySourceData, ['deferralCatchUp', true]);
+      const hasCatchup = _.find(this.moneySourceData, [
+        'deferralCatchUp',
+        true
+      ]);
       if (!hasCatchup) {
         isValidForm = false;
-        this.showAlert('Catch-up Option', 'Select a Catch-up Deferral Source or select No Catch-up elections in the Catch-up Option')
+        this.showAlert(
+          'Catch-up Option',
+          'Select a Catch-up Deferral Source or select No Catch-up elections in the Catch-up Option'
+        );
       }
     }
     if (isValidForm) {
@@ -330,8 +351,8 @@ export class AdminPlanSetupComponent implements OnInit, OnDestroy {
       _.forEach(this.investmentData, function(investment) {
         updatedInvestments.push(_.omit(investment, ['longName']));
       });
-     _.assign(planSetupData, { moneySources: updatedSources });
-     _.assign(planSetupData, { investments: updatedInvestments });
+      _.assign(planSetupData, { moneySources: updatedSources });
+      _.assign(planSetupData, { investments: updatedInvestments });
       console.log('planSetupData', planSetupData);
       this.spinner.show();
       this.planSetupService
@@ -400,6 +421,11 @@ export class AdminPlanSetupComponent implements OnInit, OnDestroy {
     this.currentCheckBox = null;
     this.currentItem = null;
     this.currentRow = 0;
+    let showOnlyOneMsg = false;
+    let canAddToSource = false;
+    let showRothAert = false;
+    let showPretaxAlert = false;
+    let showConfirmAlert = false;
     item[clickedRow.item.fieldName] = clickedRow.item.fieldValue;
     if (clickedRow.item.gridName === 'money') {
       // if the user clicked on any one of the checkbox in moneysource grid
@@ -408,24 +434,23 @@ export class AdminPlanSetupComponent implements OnInit, OnDestroy {
         if (this.moneySourceData[clickedRow.item.rowIndex].rothSource) {
           // if the selected row is having Roth property true
           if (clickedRow.item.fieldValue) {
-              if(this.moneySourceData[clickedRow.item.rowIndex].exclude){
+            if (this.rothCount !== 1) {
+              if (this.moneySourceData[clickedRow.item.rowIndex].exclude) {
                 this.showConfirm = true;
+              } else {
+                this.rothCount++;
+                this.rothSelectedIndex = clickedRow.item.rowIndex;
+                //showOnlyOneMsg = true;
               }
-            // if user checked on
-            this.rothCount++; // always increment by 1
-            if (this.rothCount === 1) {
-              this.rothSelectedIndex = clickedRow.item.rowIndex;
             }
           } else {
-            this.rothCount--; // if user checked off; always decrease by 1
+            this.rothCount--; // if user uncheck; always decrease by 1
             this.rothSelectedIndex = -1;
           }
-      } else if (
-          this.moneySourceData[clickedRow.item.rowIndex].preTaxSource
-        ) {
+        } else if (this.moneySourceData[clickedRow.item.rowIndex].preTaxSource) {
           // if the selected row is having pre tax property true
           if (clickedRow.item.fieldValue) {
-            if(this.moneySourceData[clickedRow.item.rowIndex].exclude){
+            if (this.moneySourceData[clickedRow.item.rowIndex].exclude) {
               this.showConfirm = true;
             }
             this.preTaxCount++; // always increment by 1
@@ -433,65 +458,73 @@ export class AdminPlanSetupComponent implements OnInit, OnDestroy {
               this.preTaxSelectedIndex = clickedRow.item.rowIndex;
             }
           } else {
-            this.preTaxCount--; // if user checked off; always decrease by 1
+            this.preTaxCount--; // if user uncheck; always decrease by 1
             this.preTaxSelectedIndex = -1;
           }
         } else if (clickedRow.item.fieldValue) {
           // if user clicked on the 'differral catchup' column apart from Roth or Pre-tax
           clickedRow.item.obj.checked = false; // should not allow to checked on
-          this.showAlert('Pre-tax - Roth', 'Only Pre-tax and Roth sources can be elected for Catch-up' );
+          showOnlyOneMsg= true;
+          this.showAlert('Pre-tax - Roth', 'Only Pre-tax and Roth sources can be elected for Catch-up');
         }
+
+
         if (this.rothCount > 1) {
           // if user selected 2nd Roth check box
           clickedRow.item.obj.checked = false; // not allow to be checked on
           this.rothCount--; // decrease by 1 due to not allowing to select
-          this.showAlert('Roth', 'Only Pre-tax and Roth sources can be elected for Catch-up');
+          this.showAlert(
+            'Roth',
+            'Only one Roth sources can be elected for Catch-up'
+          );
           this.isConfirm = false;
         } else if (this.preTaxCount > 1) {
           // if user selected 2nd pre-tax check box
           clickedRow.item.obj.checked = false; // not allow to be checked on
           this.preTaxCount--; // decrease by 1 due to not allowing to select
-          this.showAlert('Pre-tax', 'Only one Pre-tax source can be elected for Catch-up');
+          this.showAlert(
+            'Pre-tax',
+            'Only one Pre-tax source can be elected for Catch-up'
+          );
           this.isConfirm = false;
-        } else if(this.showConfirm) {
-            this.currentItem = item;
-            this.currentRow = clickedRow.item.rowIndex;
-        }
-          else {
+        } else if (this.showConfirm) {
+          this.currentItem = item;
+          this.currentRow = clickedRow.item.rowIndex;
+          this.confirmAlert();
+        } else {
           // if user select Roth or/and Pre-tax checkboxes, then update the main object which is used to bind the moneysouce grid
           Object.assign(this.moneySourceData[clickedRow.item.rowIndex], item);
-          }
-
+        }
       } else if (
-        clickedRow.item.fieldName === 'exclude' &&
-        clickedRow.item.fieldValue
-      ) {
+        clickedRow.item.fieldName === 'exclude' && clickedRow.item.fieldValue) {
         if (
           this.rothSelectedIndex === clickedRow.item.rowIndex ||
-          this.preTaxSelectedIndex === clickedRow.item.rowIndex ||
-          this.showConfirm
-        ) {
-          this.confirmAlert(clickedRow.item.obj);
+          this.preTaxSelectedIndex === clickedRow.item.rowIndex ) {
+            this.currentCheckBox = clickedRow.item.obj;
+          this.confirmAlert();
           // this.currentCheckBox = clickedRow.item.obj;
           // this.showAlert('Confirm Exclude','Review the Catch-up deferral check boxes and the excluded sources. Both are checked for the same source.  If correct click OK to continue.' )
           // this.isConfirm = true;
-
         } else {
-          Object.assign(this.moneySourceData[clickedRow.item.rowIndex], item);
+          canAddToSource = true;
+          //Object.assign(this.moneySourceData[clickedRow.item.rowIndex], item);
         }
       } else {
-        Object.assign(this.moneySourceData[clickedRow.item.rowIndex], item);
+        canAddToSource = true;
+       // Object.assign(this.moneySourceData[clickedRow.item.rowIndex], item);
       }
     } else {
       // if user select any checkboxes in the investment grid, then update the main object which is used to bind the investment grid
       Object.assign(this.investmentData[clickedRow.item.rowIndex], item);
     }
   }
-  confirmAlert(obj: any)
-  {
-    this.currentCheckBox = obj;
-                this.showAlert('Confirm Exclude','Review the Catch-up deferral check boxes and the excluded sources. Both are checked for the same source.  If correct click OK to continue.' )
-                this.isConfirm = true;
+  confirmAlert() {
+    
+    this.showAlert(
+      'Confirm Exclude',
+      'Review the Catch-up deferral check boxes and the excluded sources. Both are checked for the same source.  If correct click OK to continue.'
+    );
+    this.isConfirm = true;
   }
   showAlert(title, content) {
     this.alertMessage.title = title;
@@ -504,7 +537,6 @@ export class AdminPlanSetupComponent implements OnInit, OnDestroy {
   cancelClick(modelId) {
     this.modalService.close(modelId);
     this.currentCheckBox.checked = false;
-
   }
   clearFields() {
     this.enrollmentStatusCodeItems = JSON.parse(
