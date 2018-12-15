@@ -1,431 +1,112 @@
-
-devtool to be removed from app.module
-===================
-
-import {
-  Component,
-  OnDestroy,
-  OnInit,
-  ViewChild,
-  ViewContainerRef
-} from '@angular/core';
-import { Router } from '@angular/router';
-import { AgGridNg2 } from 'ag-grid-angular';
+import { Component, OnInit } from '@angular/core';
 import _ from 'lodash';
 import { NgxSpinnerService } from 'ngx-spinner';
-import { AlertMessage } from 'src/app/shared/interfaces/alert.interface';
-import { ModalService } from 'src/app/shared/services/modal.service';
 
-import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  Validators
-} from '../../../../../../node_modules/@angular/forms';
-import {
-  CatchUpOptions,
-  DivLocationOptons,
-  EmailDEOptions,
-  EntrollmentOptions,
-  ParticipantUpdateOptions,
-  PinLenthOptions
-} from '../../../../shared/config/plan-options.config';
-import {
-  ADMIN_CONFIG,
-  APP_CONST,
-  SUB_TITLE
-} from '../../../../shared/constants/app.constants';
-import { GRID_CONFIG } from '../../../../shared/constants/grid.constants';
-import { IListItem } from '../../../../shared/interfaces/list-item.interface';
-import { ToastrService } from '../../../../shared/services/toastr.service';
-import { PayAdminGlobalState } from '../../../../shared/store/pay-admin-global.store';
-import { getVoyaSelectItem } from '../../../../shared/utils/pay-admin.utils';
-import { AdminDataService } from '../../services/admin-data.service';
-import { AdminPlanSetupService } from '../../services/admin-plan-setup.service';
+import { ActivatedRoute, Router } from '@angular/router';
+import { PayAdminGlobalState } from '../../shared/store/pay-admin-global.store';
+import { APP_CONST } from '../../shared/constants/app.constants';
+import { ReportService } from './report.service';
+import { FormControl, FormBuilder } from '@angular/forms';
+
 
 @Component({
-  selector: 'app-admin-plan-setup',
-  templateUrl: './admin-plan-setup.component.html',
-  styleUrls: ['./admin-plan-setup.component.scss']
+  selector: 'app-report',
+  templateUrl: './report.component.html'
 })
-export class AdminPlanSetupComponent implements OnInit, OnDestroy {
-  @ViewChild('agGrid') agGrid: AgGridNg2;
-  planNumber: string;
-  pageTitle: string;
-  planSetupResponse: any;
-  context: any;
-  moneySourcesColumnDefs: any;
-  investmentsColumnDefs: any;
-  planUpdateForm: FormGroup;
-  isCustomMask: boolean;
-  nameChangeAllowed: boolean;
-  ssnTypeItems: any;
-  loanMatching: boolean;
-  moneySourceData: any;
-  investmentData: any;
-  initialMoneySourceData: any;
-  initailInvestmentData: any;
-  private gridApi;
-  shouldDisabled = false;
-  modelId: string;
-  participantsItmes: any;
-  pinLengthItems: any;
-  emailIDItems: any;
-  enrollmentOptions: any;
-  enrollStatusItems: any;
-  divLocItems: any;
-  catchUpItems: any;
-  frameworkComponents: any;
-  planOptions: any;
-  enrollmentStatusCodeItems: IListItem[];
-  emailIDEItems: any;
-  popupTitle: string;
-  private gridColumnApi;
-  roths: any;
-  preTaxs: any;
-  pageLoaded = false;
-  rothCount = 0;
-  preTaxCount = 0;
-  rothSelectedIndex: number;
-  preTaxSelectedIndex: number;
-  isConfirm = false;
-  currentCheckBox: any;
-  showConfirm = false;
-  currentRow = 0;
-  currentItem: any;
+export class PayAdminReportComponent implements OnInit {
+  reportColumns: any;
+  reportData: any;
+  reportNames: any;
+  reportForm: any;
+  reportHeadings: any;
+  reportDetails: any;
   style;
-  alertMessage: AlertMessage = new AlertMessage();
-
+  rowStyle;
+  gridStyle;
   constructor(
-    private planSetupService: AdminPlanSetupService,
-    private fb: FormBuilder,
+private reportService: ReportService,
     private router: Router,
-    private adminDataService: AdminDataService,
-    private modalService: ModalService,
     private spinner: NgxSpinnerService,
-    private toastrService: ToastrService,
-    vcr: ViewContainerRef
+    private fb: FormBuilder
   ) {
-    this.toastrService.toastr.setRootViewContainerRef(vcr);
-    this.style = { width: '94%' };
-    this.pageTitle = SUB_TITLE.UPDATE_PLAN;
-    this.moneySourcesColumnDefs =
-      GRID_CONFIG.PLAN_UPDATE.COLUMN_DEFS_MONEY_SOURCES;
-    this.investmentsColumnDefs =
-      GRID_CONFIG.PLAN_UPDATE.COLUMN_DEFS_INVESTMENTS;
-    this.ssnTypeItems = ADMIN_CONFIG.SSN_ITEMS;
+    this.gridStyle = { width: 400, height: 200 };
+    this.style = { width: '100%' };
+    this.rowStyle = { color: '#333333' };
   }
-
   ngOnInit() {
-    this.participantsItmes = ParticipantUpdateOptions;
-    this.pinLengthItems = PinLenthOptions;
-    this.emailIDItems = EmailDEOptions;
-    this.enrollmentOptions = EntrollmentOptions;
-    this.divLocItems = DivLocationOptons;
-    this.catchUpItems = CatchUpOptions;
-    this.planNumber = PayAdminGlobalState.planNumber;
+    this.reportForm = this.fb.group({
+      reportList: new FormControl()}
+    )
+    this.getReportNames();
+    //this.getReport();
+  }
+
+  getReportNames(): void {
     this.spinner.show();
-
-    this.getPlanSetup();
-  }
-  clearCustomMaskValidation() {
-    this.planUpdateForm.controls['customMask'].clearValidators();
-    this.planUpdateForm.controls['customMask'].setErrors(null);
-    this.planUpdateForm.controls['customMask'].reset();
-  }
-  onRadioClick(value: string) {
-    this.planUpdateForm.controls['customMask'].setValue('');
-    if (
-      this.planUpdateForm.controls['reportsFolder'].valid &&
-      this.planUpdateForm.controls['participantUpdate'].valid &&
-      this.planUpdateForm.controls['enrollment'].valid
-    ) {
-      if (value === ADMIN_CONFIG.CUSTOM_MASK_VALUE) {
-        this.planUpdateForm.setErrors({ valid: false });
-        this.planUpdateForm.controls['customMask'].setValidators([
-          Validators.required,
-          Validators.pattern('[X|x|9]{9}')
-        ]);
-        this.planUpdateForm.controls['customMask'].updateValueAndValidity();
-      } else {
-        this.clearCustomMaskValidation();
-      }
-    }
-    this.isCustomMask = value === ADMIN_CONFIG.CUSTOM_MASK_VALUE ? true : false;
-  }
-  onGridReady(params) {
-    this.gridApi = params.api;
-    this.gridColumnApi = params.columnApi;
-  }
-
-  createFormGroup(form) {
-    this.shouldDisabled = !form.loanMatching;
-
-    this.planUpdateForm = this.fb.group({
-      loanMatching: new FormControl(form.loanMatching),
-      loanPayoffs: new FormControl({
-        value: form.loanPayoffs,
-        disabled: !form.loanMatching
-      }),
-      nonACH: new FormControl(form.nonACH),
-      copyPayroll: new FormControl(form.copyPayroll),
-      crossCalendarPayroll: new FormControl(form.crossCalendarPayroll),
-      negativeContrib: new FormControl(form.negativeContrib),
-      disActPartWContrib: new FormControl(form.disActPartWContrib),
-      maskSSN: new FormControl(form.maskSSN),
-      customMask: new FormControl(form.customMask),
-      nameChange: new FormControl(form.nameChange),
-      submitBatchesInAdvance: new FormControl(form.submitBatchesInAdvance),
-      catchUp: new FormControl(form.catchUp),
-      participantUpdate: new FormControl(form.participantUpdate),
-      emailDE: new FormControl(form.emailDE),
-      divLocFunc: new FormControl(form.divLocFunc),
-      enrollment: new FormControl(form.enrollment),
-      leaveOfAbsence: new FormControl(form.leaveOfAbsence),
-      lastChangedBy: new FormControl(form.lastChangedBy),
-      pinLength: new FormControl(form.pinLength),
-      enrollmentStatusCode: new FormControl(form.enrollmentStatusCode),
-      reportsFolder: new FormControl(form.reportsFolder)
-    });
-    if (form.maskSSN === ADMIN_CONFIG.CUSTOM_MASK_VALUE) {
-      this.isCustomMask = true;
-    }
-  }
-  toggleCustomMask(value) {
-    if (value) {
-      this.isCustomMask = true;
-    } else {
-      this.isCustomMask = false;
-    }
-  }
-  enableLoanPayoff(value: any) {
-    this.shouldDisabled = !value;
-    this.planUpdateForm.controls['loanPayoffs'].setValue(false);
-  }
-  getPlanSetup() {
-    this.planSetupService.getPlanSetup(this.planNumber).subscribe(
-      planSetup => {
-        if (planSetup.status === APP_CONST.SUCCESS) {
-          this.planSetupResponse = planSetup.data;
-          this.createFormGroup(planSetup.data);
-          this.getMoneySource();
-        }
-      },
-      err => {
-        console.log('Error in plan setup load', err);
-        this.toastrService.showError(
-          err.error.error.msg,
-          err.error.error.status + ' !'
-        );
-        this.spinner.hide();
-      }
-    );
-  }
-  getMoneySource() {
-    this.planSetupService.getMoneySource(this.planNumber).subscribe(
-      money => {
-        if (money.status === APP_CONST.SUCCESS) {
-          this.moneySourceData = money.data;
-          // this.moneySourceData = this.mergeObjects(
-          //   this.planSetupResponse.moneySources,
-          //   money.data
-          // );
-          this.initialMoneySourceData = JSON.parse(
-            JSON.stringify(this.moneySourceData)
-          );
-          PayAdminGlobalState.moneySource = this.moneySourceData;
-          this.getInvestments();
-        }
-      },
-      err => {
-        console.log('Error in money source load', err);
-        this.toastrService.showError(
-          err.error.error.msg,
-          err.error.error.status + ' !'
-        );
-        this.spinner.hide();
-      }
-    );
-  }
-  getInvestments() {
-    this.planSetupService.getInvestments(this.planNumber).subscribe(
-      investments => {
-        if (investments.status === APP_CONST.SUCCESS) {
-          this.investmentData = investments.data;
-          // this.investmentData = this.mergeObjects(
-          //   this.planSetupResponse.investments,
-          //   investments.data
-          // );
-          this.initailInvestmentData = JSON.parse(
-            JSON.stringify(this.investmentData)
-          );
-          PayAdminGlobalState.investments = this.investmentData;
-          this.getOptions();
-        }
-      },
-      err => {
-        this.toastrService.showError(
-          err.error.error,
-          err.error.error.status + ' !'
-        );
-        console.log('Error in money source load', err);
-        this.spinner.hide();
-      }
-    );
-  }
-  getOptions() {
-    this.planSetupService.getOptions(this.planNumber).subscribe(
-      options => {
-        if (options.status === APP_CONST.SUCCESS) {
-          this.planOptions = options.data;
-          PayAdminGlobalState.isCatchUp = this.planOptions.showCatchUpOptions;
-          this.emailIDEItems = this.getEmailDEItems(this.planOptions.rsd);
-          this.getEnrollmentList();
+    this.reportService.getReportNames(PayAdminGlobalState.planNumber).subscribe(
+      names => {
+        if (names.status === APP_CONST.SUCCESS) {
+          this.reportNames = names.data;
+          console.log(this.reportNames,names.data )
           this.spinner.hide();
-          this.pageLoaded = true;
-        }
-      },
-      err => {
-        this.toastrService.showError(
-          err.error.error.msg,
-          err.error.error.status + ' !'
-        );
-        console.log('Error in Plan option call', err);
-        this.spinner.hide();
-      }
-    );
-  }
-  getEnrollmentList() {
-    this.planSetupService.getEnrollmentList(this.planNumber).subscribe(
-      enrollments => {
-        if (enrollments.status === APP_CONST.SUCCESS) {
-          this.enrollmentStatusCodeItems = getVoyaSelectItem(enrollments.data);
+        } else {
+          console.log('Error in report name', names);
           this.spinner.hide();
-          this.pageLoaded = true;
         }
       },
       err => {
-        this.toastrService.showError(
-          err.error.error.msg,
-          err.error.error.status + '!'
-        );
-        console.log('Error in Plan option call', err);
+        console.log('Error in roport name from service', err);
         this.spinner.hide();
       }
     );
-  }
-  getEmailDEItems(isRsd: boolean): any {
-    let _emailOptions: { value: string; displayText: string }[];
-    if (isRsd) {
-      _emailOptions = [_.find(EmailDEOptions, ['value', 'VR151'])];
-    } else {
-      _emailOptions = [_.find(EmailDEOptions, ['value', 'PH155'])];
-    }
-    _emailOptions.push({ value: '', displayText: 'No Email' });
-    return _emailOptions;
-  }
-  onSubmit() {
-    let isValidForm = true;
-    let updatedSources = [];
-    let updatedInvestments = [];
-    let planSetupData = this.planUpdateForm.value;
-    // updated moneysource details will attach to the main object
-    _.forEach(this.moneySourceData, function(source) {
-      updatedSources.push(_.omit(source, ['longName', 'shortName']));
-    });
-    if (this.planOptions.showCatchUpOptions && planSetupData.catchUp !== 'N') {
-      const hasCatchup = _.find(this.moneySourceData, [
-        'deferralCatchUp',
-        true
-      ]);
-      if (!hasCatchup) {
-        isValidForm = false;
-        this.showAlert(
-          'Catch-up Option',
-          'Select a Catch-up Deferral Source or select No Catch-up elections in the Catch-up Option'
-        );
-      }
-    }
-    if (isValidForm) {
-      // updated investments details will attach to the main object
-      _.forEach(this.investmentData, function(investment) {
-        updatedInvestments.push(_.omit(investment, ['longName']));
-      });
-      _.assign(planSetupData, { moneySources: updatedSources });
-      _.assign(planSetupData, { investments: updatedInvestments });
-      console.log('planSetupData', planSetupData);
-      this.spinner.show();
-      this.planSetupService
-        .savePlanSetup(this.planNumber, planSetupData)
-        .subscribe(
-          saveStatus => {
-            this.spinner.hide();
-            if (saveStatus.status === APP_CONST.SUCCESS) {
-              planSetupData = null;
-              updatedSources = null;
-              updatedInvestments = null;
-              PayAdminGlobalState.moneySource = null;
-              PayAdminGlobalState.investments = null;
-              this.moneySourceData = null;
-              this.investmentData = null;
-              this.planSetupResponse = null;
-              AdminDataService.successMsg =
-                'Plan General Information successfully updated';
-              this.router.navigate(['/admin']);
-            } else {
-              this.toastrService.showError(
-                saveStatus.error.msg,
-                saveStatus.status + ' !'
-              );
-            }
-          },
-          err => {
-            console.log('Error in plan save', err.error.error.msg);
-            this.toastrService.showError(
-              err.error.error.msg,
-              err.error.error.status + '!'
-            );
-            this.spinner.hide();
-          }
-        );
-    }
-  }
-  mergeObjects(parentObj, childObj) {
-    return this.planSetupService.mergeObjects(parentObj, childObj);
   }
 
-  gotoBack() {
-    this.router.navigate(['/admin']);
+  getReport(reportName: string): void {
+    this.reportService.getReport(PayAdminGlobalState.planNumber).subscribe(
+      report => {
+        this.spinner.hide();
+        if (report.status === APP_CONST.SUCCESS) {
+          this.reportData = report.data.content;
+          this.reportHeadings = report.data.headers ;
+          this.reportDetails = {
+                          'planName': report.data.planName,
+                          'runDa  te': report.data.runDate,
+                          'runTime': report.data.runTime,
+                          'attention': report.data.attention,
+                          'reportName': report.data.reportName};
+          this.createGridHeadings();
+        } else {
+          console.log('Error in report reportData', report);
+                  this.spinner.hide();
+        }
+      },
+      err => {
+        console.log('Error in roport name from service', err);
+        this.spinner.hide();
+      }
+    );
   }
-  ngOnDestroy() {
-    PayAdminGlobalState.bankinfo = null;
-  }
-  showParticipantPopup() {
-    this.modelId = 'participant';
-    this.popupTitle = 'Participant Update Option';
-    this.modalService.open('plansteup');
-  }
-  showCatchupPopup() {
-    this.modelId = 'catchup';
-    this.popupTitle = 'Catch-up Option';
-    this.modalService.open('plansteup');
-  }
-  showEnrollPopup() {
-    this.popupTitle = 'Enrollment Option';
-    this.modelId = 'enroll';
-    this.modalService.open('plansteup');
-  }
+  createGridHeadings()
+  {
+const newHeadings = [];
+    this.reportHeadings.forEach((heading, index) => {
+      newHeadings.push(  { headerName: heading.name, field: heading.id, width: 170 });
+    });
+    this.reportColumns = newHeadings;
+    }
+
+
+}
+============================
+
   getSelectedRow(clickedRow) {
     const item = {};
     this.showConfirm = false;
     this.currentCheckBox = null;
-    this.currentItem = null;
-    this.currentRow = 0;
     let showOnlyOneMsg = false;
     let canAddToSource = false;
     let showRothAert = false;
     let showPretaxAlert = false;
-    let showConfirmAlert = false;
     item[clickedRow.item.fieldName] = clickedRow.item.fieldValue;
     if (clickedRow.item.gridName === 'money') {
       // if the user clicked on any one of the checkbox in moneysource grid
@@ -438,80 +119,69 @@ export class AdminPlanSetupComponent implements OnInit, OnDestroy {
               if (this.moneySourceData[clickedRow.item.rowIndex].exclude) {
                 this.showConfirm = true;
               } else {
-                this.rothCount++;
+                this.rothCount = 1; // roth reached maximum
                 this.rothSelectedIndex = clickedRow.item.rowIndex;
-                //showOnlyOneMsg = true;
               }
+            } else {
+              clickedRow.item.obj.checked = false; // not allow to be checked on
+              showRothAert = true;
             }
           } else {
-            this.rothCount--; // if user uncheck; always decrease by 1
+            this.rothCount = 0; // if user uncheck; always reset to 1
             this.rothSelectedIndex = -1;
           }
         } else if (this.moneySourceData[clickedRow.item.rowIndex].preTaxSource) {
           // if the selected row is having pre tax property true
           if (clickedRow.item.fieldValue) {
-            if (this.moneySourceData[clickedRow.item.rowIndex].exclude) {
-              this.showConfirm = true;
-            }
-            this.preTaxCount++; // always increment by 1
-            if (this.preTaxCount === 1) {
-              this.preTaxSelectedIndex = clickedRow.item.rowIndex;
-            }
+            if (this.preTaxCount !== 1) {
+                if (this.moneySourceData[clickedRow.item.rowIndex].exclude) {
+                  this.showConfirm = true;
+                } else {
+                  this.preTaxCount = 1; // pre-tax reached maximum
+                  this.preTaxSelectedIndex = clickedRow.item.rowIndex;
+                }
+              } else {
+                clickedRow.item.obj.checked = false; // not allow to be checked on
+                showPretaxAlert = true;
+              }
           } else {
-            this.preTaxCount--; // if user uncheck; always decrease by 1
+            this.preTaxCount = 0; // if user uncheck; reset to 0
             this.preTaxSelectedIndex = -1;
           }
         } else if (clickedRow.item.fieldValue) {
           // if user clicked on the 'differral catchup' column apart from Roth or Pre-tax
           clickedRow.item.obj.checked = false; // should not allow to checked on
-          showOnlyOneMsg= true;
-          this.showAlert('Pre-tax - Roth', 'Only Pre-tax and Roth sources can be elected for Catch-up');
+          showOnlyOneMsg = true;
         }
-
-
-        if (this.rothCount > 1) {
-          // if user selected 2nd Roth check box
-          clickedRow.item.obj.checked = false; // not allow to be checked on
-          this.rothCount--; // decrease by 1 due to not allowing to select
-          this.showAlert(
-            'Roth',
-            'Only one Roth sources can be elected for Catch-up'
-          );
-          this.isConfirm = false;
-        } else if (this.preTaxCount > 1) {
-          // if user selected 2nd pre-tax check box
-          clickedRow.item.obj.checked = false; // not allow to be checked on
-          this.preTaxCount--; // decrease by 1 due to not allowing to select
-          this.showAlert(
-            'Pre-tax',
-            'Only one Pre-tax source can be elected for Catch-up'
-          );
-          this.isConfirm = false;
+        if (showOnlyOneMsg) {
+        this.showAlert('Pre-tax - Roth', 'Only Pre-tax and Roth sources can be elected for Catch-up');
+        } else if (showRothAert) {
+          this.showAlert('Roth', 'Only one Roth sources can be elected for Catch-up');
+        } else if (showPretaxAlert) {
+          this.showAlert('Pre-tax', 'Only one Pre-tax source can be elected for Catch-up');
         } else if (this.showConfirm) {
-          this.currentItem = item;
-          this.currentRow = clickedRow.item.rowIndex;
+          this.currentCheckBox = clickedRow.item;
           this.confirmAlert();
         } else {
           // if user select Roth or/and Pre-tax checkboxes, then update the main object which is used to bind the moneysouce grid
-          Object.assign(this.moneySourceData[clickedRow.item.rowIndex], item);
+          canAddToSource =  true;
         }
       } else if (
         clickedRow.item.fieldName === 'exclude' && clickedRow.item.fieldValue) {
         if (
           this.rothSelectedIndex === clickedRow.item.rowIndex ||
           this.preTaxSelectedIndex === clickedRow.item.rowIndex ) {
-            this.currentCheckBox = clickedRow.item.obj;
+            this.currentCheckBox = clickedRow.item;
+            canAddToSource = false;
           this.confirmAlert();
-          // this.currentCheckBox = clickedRow.item.obj;
-          // this.showAlert('Confirm Exclude','Review the Catch-up deferral check boxes and the excluded sources. Both are checked for the same source.  If correct click OK to continue.' )
-          // this.isConfirm = true;
         } else {
           canAddToSource = true;
-          //Object.assign(this.moneySourceData[clickedRow.item.rowIndex], item);
         }
       } else {
         canAddToSource = true;
-       // Object.assign(this.moneySourceData[clickedRow.item.rowIndex], item);
+      }
+      if(canAddToSource){
+        Object.assign(this.moneySourceData[clickedRow.item.rowIndex], item);
       }
     } else {
       // if user select any checkboxes in the investment grid, then update the main object which is used to bind the investment grid
@@ -519,46 +189,14 @@ export class AdminPlanSetupComponent implements OnInit, OnDestroy {
     }
   }
   confirmAlert() {
-    
+    this.isConfirm = true;
     this.showAlert(
       'Confirm Exclude',
       'Review the Catch-up deferral check boxes and the excluded sources. Both are checked for the same source.  If correct click OK to continue.'
     );
-    this.isConfirm = true;
   }
   showAlert(title, content) {
     this.alertMessage.title = title;
     this.alertMessage.content = content;
     this.modalService.open('confirm-modal');
   }
-  okClick(modelId) {
-    this.modalService.close(modelId);
-  }
-  cancelClick(modelId) {
-    this.modalService.close(modelId);
-    this.currentCheckBox.checked = false;
-  }
-  clearFields() {
-    this.enrollmentStatusCodeItems = JSON.parse(
-      JSON.stringify(this.enrollmentStatusCodeItems)
-    );
-    this.planSetupResponse = JSON.parse(JSON.stringify(this.planSetupResponse));
-    this.createFormGroup(this.planSetupResponse);
-    this.moneySourceData = JSON.parse(
-      JSON.stringify(this.initialMoneySourceData)
-    );
-    this.investmentData = JSON.parse(
-      JSON.stringify(this.initailInvestmentData)
-    );
-    PayAdminGlobalState.moneySource = this.moneySourceData;
-    PayAdminGlobalState.investments = this.investmentData;
-    this.rothCount = 0;
-    this.preTaxCount = 0;
-  }
-}
-============
-
- this.reportHeadings.forEach((heading, index) => {
-      this.reportHeadings[index]['columnName'] = heading.name;
-    });
-    const newobj =  _.merge(this.reportHeadings, this.reportData);
