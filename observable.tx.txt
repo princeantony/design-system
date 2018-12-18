@@ -1,6 +1,28 @@
-  #reportItems{
-    display: none;
+          (fieldBlur) = "removeSpace($event,'accOverName')"
+          
+          -----
+            removeSpace(value,ctr)
+  {
+    if(ctr === 'overrideName'){
+   const trimValue = _.trim(this.updateOtionalDataForm.controls[ctr].value);
+   this.updateOtionalDataForm.controls[ctr].setValue(trimValue);
+    }
   }
-    .ag-floating-filter-input{
-    display: none;
+  ------------------
+    addRemoveOverValidation(checkCtr, txtCtr)
+  {
+    if(this.updateOtionalDataForm.controls[checkCtr].value) {
+      if( _.trim(this.updateOtionalDataForm.controls[txtCtr].value) === '') {
+        this.updateOtionalDataForm.setErrors({invalid: true});
+        this.isValidForm = false;
+        this.errorMeassge = 'Override Name is required if Use Override is selected';
+      } else {
+        this.errorMeassge = '';
+        this.isValidForm = true;
+      }
+    } else {
+      this.isValidForm = true;
+      this.errorMeassge = '';
   }
+  }
+  ======================================
