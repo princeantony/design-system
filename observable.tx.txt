@@ -26,3 +26,88 @@
   }
   }
   ======================================
+  getSelectedRow(clickedRow) {
+    const item = {};
+    let showPopup = false;
+    this.showConfirm = false;
+    this.currentCheckBox = null;
+    let showOnlyOneMsg = false;
+    let canAddToSource = false;
+    let showRothAert = false;
+    let showPretaxAlert = false;
+    let popupMessage = '';
+    item[clickedRow.item.fieldName] = clickedRow.item.fieldValue;
+    const isRoth = this.moneySourceData[clickedRow.item.rowIndex].rothSource;
+    const isPreTax = this.moneySourceData[clickedRow.item.rowIndex].preTaxSource;
+    if (clickedRow.item.gridName === 'money') {
+      if (clickedRow.item.fieldName === 'deferralCatchUp' || clickedRow.item.fieldName === 'exclude') {
+        if ( isRoth || isPreTax ) {
+          if (clickedRow.item.fieldValue) {
+             if(clickedRow.item.fieldName === 'deferralCatchUp'){
+               if(isRoth) {
+                  const _rothSource = ._find(this.moneySourceData, { 'deferralCatchUp': true, 'rothSource': true });
+                  if(_rothSource.length > 1){
+                    showPopup = true;
+                    this.showAlert('Roth', 'Only one Roth sources can be elected for Catch-up');
+                  }
+                } else {
+                  const _preTaxSource = ._find(this.moneySourceData, { 'deferralCatchUp': true, 'preTaxSource': true });
+                  if(_preTaxSource.length > 1){
+                    showPopup = true;
+                    this.showAlert('Pre-tax', 'Only one Pre-tax source can be elected for Catch-up');
+                  }
+                }
+                 else if (this.moneySourceData[clickedRow.item.rowIndex].exclude) {
+                      this.showConfirm = true;
+                      this.confirmAlert();
+                    }
+            } else if (this.moneySourceData[clickedRow.item.rowIndex].deferralCatchUp) {
+                this.showConfirm = true;
+              }
+            } else {
+               showRothAert = false;
+               this.isConfirm = false;
+               this.showConfirm = false;
+             }
+        }  else if (clickedRow.item.fieldValue) {
+          // if user clicked on the 'differral catchup' column apart from Roth or Pre-tax
+          clickedRow.item.obj.checked = false; // should not allow to checked on
+          showOnlyOneMsg = true;
+          this.showConfirm = false;
+          this.isConfirm = false;
+        }
+        if (showOnlyOneMsg) {
+        this.showAlert('Pre-tax - Roth', 'Only Pre-tax and Roth sources can be elected for Catch-up');
+        } else if (showRothAert) {
+          this.showAlert('Roth', 'Only one Roth sources can be elected for Catch-up');
+        } else if (showPretaxAlert) {
+          this.showAlert('Pre-tax', 'Only one Pre-tax source can be elected for Catch-up');
+        } else if (this.showConfirm) {
+          this.currentCheckBox = clickedRow.item;
+          this.confirmAlert();
+        } else {
+          // if user select Roth or/and Pre-tax checkboxes, then update the main object which is used to bind the moneysouce grid
+          canAddToSource =  true;
+        }
+      } else if (
+        clickedRow.item.fieldName === 'exclude' && clickedRow.item.fieldValue) {
+        if (
+          this.rothSelectedIndex === clickedRow.item.rowIndex ||
+          this.preTaxSelectedIndex === clickedRow.item.rowIndex ) {
+            this.currentCheckBox = clickedRow.item;
+            canAddToSource = false;
+          this.confirmAlert();
+        } else {
+          canAddToSource = true;
+        }
+      } else {
+        canAddToSource = true;
+      }
+      if(canAddToSource){
+        Object.assign(this.moneySourceData[clickedRow.item.rowIndex], item);
+      }
+    } else {
+      // if user select any checkboxes in the investment grid, then update the main object which is used to bind the investment grid
+      Object.assign(this.investmentData[clickedRow.item.rowIndex], item);
+    }
+  }
