@@ -1,9 +1,6 @@
 LOA in the datalement dropdown
-
- clearCustomMaskValidation(ctrName) {
-    if(!this.updateOtionalDataForm.controls[ctrName].value){
-    this.updateOtionalDataForm.controls[ctrName].clearValidators();
-    this.updateOtionalDataForm.controls[ctrName].setErrors(null);
-    }
-   //this.updateOtionalDataForm.controls[ctrName].reset();
-  }
+this.copyChk = document.getElementById('copyToAll');
+    this.copyChk.setAttribute('checked', 'false');
+    this.bankInfoForm.controls['copyToAll'].reset();
+    this.updateInfo = (_.omit(this.bankInfoForm.value, ['confirmAbaNumber', 'confirmAcctNumber','copyToAll', 'coypyFromBank']));
+    // this.bankInfoForm.removeControl('confirmAbaNumber');
