@@ -1,6 +1,9 @@
-LOA in the datalement dropdown
-this.copyChk = document.getElementById('copyToAll');
-    this.copyChk.setAttribute('checked', 'false');
-    this.bankInfoForm.controls['copyToAll'].reset();
-    this.updateInfo = (_.omit(this.bankInfoForm.value, ['confirmAbaNumber', 'confirmAcctNumber','copyToAll', 'coypyFromBank']));
-    // this.bankInfoForm.removeControl('confirmAbaNumber');
+I am Prince Antony, a technical architect with 14 years of experience in designing and implementing solutions mostly in Microsoft technologies.  Passionate about technology and self-driven to stay up to date with the latest technological trends.  I have conducted trainings across a plethora of technologies.
+Other details:
+Previous organizations:  (1) SLK Software,  (2) Wisdomleaf Technologies
+Domain Knowledge:  Insurance, Commercial banking, Risk & Complaints and Inventory
+Education: Master in Computer Science from Sikkim Manipal University
+Hobbies: Travelling & meet new people, conducting technical trainings and spending time with family
+Personal Details: Married to Tyne . We are parents of two boys - Jayden(9) & Jared(7)
+Home town:  Trichur, Kerala
+Current location: MS Palaya, Near Sambhram College, Bangalore
