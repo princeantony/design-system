@@ -1,9 +1,53 @@
-I am Prince Antony, a technical architect with 14 years of experience in designing and implementing solutions mostly in Microsoft technologies.  Passionate about technology and self-driven to stay up to date with the latest technological trends.  I have conducted trainings across a plethora of technologies.
-Other details:
-Previous organizations:  (1) SLK Software,  (2) Wisdomleaf Technologies
-Domain Knowledge:  Insurance, Commercial banking, Risk & Complaints and Inventory
-Education: Master in Computer Science from Sikkim Manipal University
-Hobbies: Travelling & meet new people, conducting technical trainings and spending time with family
-Personal Details: Married to Tyne . We are parents of two boys - Jayden(9) & Jared(7)
-Home town:  Trichur, Kerala
-Current location: MS Palaya, Near Sambhram College, Bangalore
+ReactJS Coding Standards
+Tools: 
+•	Nodejs
+•	Webpack
+•	VS Code
+Npm Modules: 
+•	axios (for api calls)
+•	lodash (for object and array manipulations)
+•	redux (for state management)
+•	react
+•	jspdf (for documents)
+•	d3js (for graphs)
+•	style-loader, node-sass, sass-loader, file-loader, url-loader, css-loader, babel etc.
+•	Mocha, Chai, Enzyme, Sinon (for TDD/BDD)
+•	CucumberJS (for automation testing)
+
+VS Code Editor Plugins:
+	https://codeburst.io/top-javascript-vscode-extensions-for-faster-development-c687c39596f5
+
+ES Lint Rules:
+ 
+Good Vs Bad practices: 
+•	Develop HOC(Higher Order Components)
+•	Always define Prop-types and defaultProps for props
+•	Split your code into multiple smaller functions
+•	Create multiple files instead of writing a big file
+•	Always write tests for your code
+•	Always use componentDidcatch and try/catch
+•	Use refs for uncontrolled component
+•	Move all the messages/contstants to *.json files
+•	Ordering of the code should be:
+•	displayName
+•	propTypes
+•	contextTypes
+•	childContextTypes
+•	mixins
+•	statics
+•	defaultProps
+•	getDefaultProps
+•	getInitialState
+•	getChildContext
+•	componentWillMount
+•	componentDidMount
+•	componentWillReceiveProps
+•	shouldComponentUpdate
+•	componentWillUpdate
+•	componentDidUpdate
+•	componentWillUnmount
+•	clickHandlers or eventHandlers like onClickSubmit() or onChangeDescription()
+•	getter methods for render like getSelectReason() or getFooterContent()
+•	optional render methods like renderNavigation() or renderProfilePicture()
+•	render
+
