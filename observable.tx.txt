@@ -51,3 +51,16 @@ Good Vs Bad practices:
 •	optional render methods like renderNavigation() or renderProfilePicture()
 •	render
 
+=============
+
+1.	Why server side rendering? How is it different for  the current browser side rendering
+2.	Benefits of  server side rendering
+3.	Pros / Cons of server side rendering
+4.	Solution options for server side rendering : design options
+5.	Framework who support this
+===========================
+
+
+1.	Process flow diagram depicting the steps / stages from requirements  coding unit test  code review process  DevOps. Etc.
+2.	The document need to formatted and language need to be checked. 
+3.	Some of the sections, it’s hard to follow for any new person reading it. 
