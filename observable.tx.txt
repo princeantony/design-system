@@ -64,3 +64,5 @@ Good Vs Bad practices:
 1.	Process flow diagram depicting the steps / stages from requirements  coding unit test  code review process  DevOps. Etc.
 2.	The document need to formatted and language need to be checked. 
 3.	Some of the sections, it’s hard to follow for any new person reading it. 
+========================
+https://medium.freecodecamp.org/server-side-rendering-your-react-app-in-three-simple-steps-7a82b95db82e
